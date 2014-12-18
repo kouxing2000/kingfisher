@@ -45,3 +45,9 @@ The tool will be able to start from command line and read a configuration file i
 
 
 *NOTE*: read the `Makefile` for details if those two does not work well. ;)
+
+# Other library worth to compare
+
+- [hoxy](http://greim.github.io/hoxy/)
+- [mock server](http://mock-server.com/)
+- [browsermod proxy](http://bmp.lightbody.net/)
