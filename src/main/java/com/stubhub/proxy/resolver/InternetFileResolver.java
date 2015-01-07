@@ -26,10 +26,11 @@ import org.slf4j.LoggerFactory;
 
 import com.stubhub.proxy.Constants;
 import com.stubhub.proxy.Context;
+import com.stubhub.proxy.URLResolver;
 
-public class InternetFileResover implements URLResolver {
+public class InternetFileResolver implements URLResolver {
 
-	private static Logger logger = LoggerFactory.getLogger(InternetFileResover.class);
+	private static Logger logger = LoggerFactory.getLogger(InternetFileResolver.class);
 
 	private static final List<String> requestCopyHeaderNames = new ArrayList<String>();
 	static {
@@ -37,7 +38,7 @@ public class InternetFileResover implements URLResolver {
 		requestCopyHeaderNames.add(HttpHeaders.Names.COOKIE);
 		requestCopyHeaderNames.add(HttpHeaders.Names.USER_AGENT);
 	}
-	
+
 	private static final List<String> responseCopyHeaderNames = new ArrayList<String>();
 	static {
 		responseCopyHeaderNames.add(HttpHeaders.Names.CONTENT_TYPE);
@@ -81,9 +82,9 @@ public class InternetFileResover implements URLResolver {
 
 		ByteBuf buffer = null;
 		if (bytearray != null) {
-			buffer = Unpooled.copiedBuffer(bytearray);
+			buffer = Unpooled.copiedBuffer(generateResponseBytes(bytearray, context));
 		}
-		
+
 		DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
 				HttpResponseStatus.OK, buffer);
 
@@ -103,6 +104,10 @@ public class InternetFileResover implements URLResolver {
 		}
 
 		return defaultFullHttpResponse;
+	}
+
+	protected byte[] generateResponseBytes(byte[] originalBytes, Context context) {
+		return originalBytes;
 	}
 
 }

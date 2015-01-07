@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.stubhub.proxy.Constants;
 import com.stubhub.proxy.Context;
+import com.stubhub.proxy.URLResolver;
 
 public class LocalFileResolver implements URLResolver {
 

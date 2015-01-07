@@ -1,6 +1,4 @@
-package com.stubhub.proxy.resolver;
-
-import com.stubhub.proxy.Context;
+package com.stubhub.proxy;
 
 import io.netty.handler.codec.http.HttpResponse;
 

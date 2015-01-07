@@ -18,28 +18,34 @@
 	        	},
 	        "body":"<html>ABCD</html>"
         },
-        "https://abcd.abcd" : 
+        "http://www.stubhub.com/shape/catalog/events/v1/9117449/metadata/inventoryMetaData?useShapeApiFlag=true&_type=json" : 
         {
 	        "version":"1.1",
-	        "statusCode":200,
-	        "delayMS": 2000,
+	        "statusCode":404,
+	        "delayMS": 500,
 	        "headers":{
 	        	"Keep-Alive":"timeout=5, max=100",
 	        	"Connection":"Keep-Alive"
 	        	},
-	        "body":"<html>ABCDEFG</html>"
+	        "body":"<html>ERROR</html>"
         }
     },
     "mappings": {
+        "http://cache*.stubhubstatic.com/resources/mojito/js/feature/bundle-ep-bp-seatmapPagi-14.33.0-SNAPSHOT.js" : "e:\\bundle.js",
         "http://www.${env}.com/<x>/<y>/event/<id>/" : "http://www.${env}.com/eventpage-seopoc/?event_id=<id>",
         "http://www.${env}.com/<x>/performer/<id>/<p>" : "http://www.${env}.com/performer-seopoc/?performer_id=<id>"
+    },
+    "handlers" : {
+        "https://m.slcq001.com/shape/accountmanagement/*" : "com.stubhub.proxy.custom.PseudolocalizationHandler"
     },
     "chainedProxies": [
         {
             "host": "slc-entbc-001",
             "port": 80,
+            "disabled" : true,
             "bypassHosts": [
                 "*srwd*",
+                "*slcq*",
                 "*stubhub*"
             ]
         }

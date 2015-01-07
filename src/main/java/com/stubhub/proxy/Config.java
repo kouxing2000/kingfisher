@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.activation.MimetypesFileTypeMap;
-import javax.management.RuntimeErrorException;
-
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
 import org.littleshoot.proxy.impl.ProxyUtils;
@@ -26,10 +23,13 @@ public class Config {
 
 	private Map<String, String> mappings;
 	private Map<String, HttpResponseBuilder> answers;
+	private Map<String, String> handlers;
 
 	public static class Proxy {
 		private String host;
 		private int port;
+		private boolean disabled;
+
 		private List<String> bypassHosts;
 
 		public Proxy() {
@@ -52,6 +52,14 @@ public class Config {
 			this.port = port;
 		}
 
+		public boolean isDisabled() {
+			return disabled;
+		}
+		
+		public void setDisabled(boolean disabled) {
+			this.disabled = disabled;
+		}
+		
 		public List<String> getBypassHosts() {
 			return bypassHosts;
 		}
@@ -86,6 +94,10 @@ public class Config {
 		private transient List<Pattern> bypassHostPatterns;
 
 		public boolean isAllowed(String host) {
+			if (disabled) {
+				return false;
+			}
+			
 			if (bypassHostPatterns == null) {
 				synchronized (this) {
 					bypassHostPatterns = new ArrayList<Pattern>();
@@ -154,6 +166,14 @@ public class Config {
 
 	public void setAnswers(Map<String, HttpResponseBuilder> answers) {
 		this.answers = answers;
+	}
+
+	public Map<String, String> getHandlers() {
+		return handlers;
+	}
+
+	public void setHandlers(Map<String, String> handlers) {
+		this.handlers = handlers;
 	}
 	
 	public static void main(String[] args) {

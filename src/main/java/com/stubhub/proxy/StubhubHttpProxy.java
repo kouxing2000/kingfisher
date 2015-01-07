@@ -77,9 +77,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.stubhub.proxy.Config.Proxy;
-import com.stubhub.proxy.resolver.InternetFileResover;
+import com.stubhub.proxy.resolver.InternetFileResolver;
 import com.stubhub.proxy.resolver.LocalFileResolver;
-import com.stubhub.proxy.resolver.URLResolver;
 
 public class StubhubHttpProxy {
 
@@ -100,10 +99,12 @@ public class StubhubHttpProxy {
 	// new SelfSignedSslEngineSource(
 	// "littleproxy_keystore.jks").getSslContext();
 
-	private URLResolver localResolver = new LocalFileResolver();
-	private URLResolver internetResolver = new InternetFileResover();
+	private final URLResolver localResolver = new LocalFileResolver();
+	private final URLResolver internetResolver = new InternetFileResolver();
 
-	private HttpResponse handleRequestBySelf(HttpRequest httpRequest) {
+	private HttpResponse handleRequestBySelf(Context context) {
+		HttpRequest httpRequest = context.getRequest();
+
 		// logger.info(httpRequest.toString());
 
 		if (ProxyUtils.isCONNECT(httpRequest) && !httpRequest.getUri().contains("/")) {
@@ -111,18 +112,18 @@ public class StubhubHttpProxy {
 			return null;
 		}
 
-		String url = httpRequest.getUri();
-		if (url.startsWith("http")) {
-			url = url.substring(url.indexOf("//") + 2);
+		String urlWithoutHttpPrefix = httpRequest.getUri();
+		if (urlWithoutHttpPrefix.startsWith("http")) {
+			urlWithoutHttpPrefix = urlWithoutHttpPrefix.substring(urlWithoutHttpPrefix.indexOf("//") + 2);
 		} else {
-			url = httpRequest.headers().get("Host") + url;
+			urlWithoutHttpPrefix = httpRequest.headers().get("Host") + urlWithoutHttpPrefix;
 		}
 
 		// logger.info("URL:" + url);
 
 		for (Map.Entry<Pattern, Object> e : urlMappings.entrySet()) {
 			Pattern pattern = e.getKey();
-			Matcher matcher = pattern.matcher(url);
+			Matcher matcher = pattern.matcher(urlWithoutHttpPrefix);
 
 			if (matcher.matches()) {
 
@@ -130,7 +131,7 @@ public class StubhubHttpProxy {
 
 				try {
 
-					logger.info("handle by proxy =>" + url);
+					logger.info("handle by proxy =>" + urlWithoutHttpPrefix);
 
 					Object value = e.getValue();
 
@@ -159,7 +160,13 @@ public class StubhubHttpProxy {
 							resolver = internetResolver;
 						}
 
-						httpResponse = resolver.read(realUrl, new Context().setRequest(httpRequest));
+						httpResponse = resolver.read(realUrl, context);
+
+					} else if (value instanceof URLResolver) {
+						httpResponse = ((URLResolver) value).read((context.isUsingHttps() ? "https://" : "http://")
+								+ urlWithoutHttpPrefix, context);
+					} else {
+						logger.error("not support {}", value);
 					}
 
 				} catch (Exception exp) {
@@ -211,7 +218,7 @@ public class StubhubHttpProxy {
 	}
 
 	private String fillVariable(String value, Map<String, String> variables) {
-		//TODO using string pattern to replace
+		// TODO using string pattern to replace
 		for (Map.Entry<String, String> e : variables.entrySet()) {
 			value = value.replace("${" + e.getKey() + "}", e.getValue());
 		}
@@ -304,7 +311,8 @@ public class StubhubHttpProxy {
 						// + ">-----------");
 
 						if (httpObject instanceof HttpRequest) {
-							return handleRequestBySelf((HttpRequest) httpObject);
+							return handleRequestBySelf(new Context().setRequest((HttpRequest) httpObject)
+									.setUsingHttps(false));
 						}
 
 						return null;
@@ -323,7 +331,7 @@ public class StubhubHttpProxy {
 			};
 		};
 
-		HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withPort(config.getProxyPort())
+		HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withAllowLocalOnly(false).withListenOnAllAddresses(true).withPort(config.getProxyPort())
 				.withFiltersSource(filtersSource);
 
 		if (!config.getChainedProxies().isEmpty()) {
@@ -410,6 +418,23 @@ public class StubhubHttpProxy {
 				urlMappings.put(pattern, fillVariable(e.getValue(), config.getVariables()));
 				if (variables != null) {
 					urlMappingNamedGroupMappings.put(pattern, variables);
+				}
+			}
+		}
+
+		if (config.getHandlers() != null) {
+			for (Map.Entry<String, String> e : config.getHandlers().entrySet()) {
+				try {
+					Class<?> clazz = Class.forName(e.getValue());
+					logger.info("read handler: {} for {}", clazz, e.getKey());
+					if (URLResolver.class.isAssignableFrom(clazz)) {
+						String sourceURL = addSourceUrls(e.getKey());
+						urlMappings.put(Pattern.compile(ProxyUtils.wildcardToRegex(sourceURL)), clazz.newInstance());
+					} else {
+						logger.error("{} is not sub-type of {}", clazz, URLResolver.class);
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
 				}
 			}
 		}
@@ -514,7 +539,7 @@ public class StubhubHttpProxy {
 	final EventLoopGroup clientGroup = new NioEventLoopGroup();
 
 	private void forwardHttpRequestToRealServer(final HttpRequest request, final ResponseCallback calback) {
-		String url = request.headers().get("Host") + request.getUri();
+		final String url = request.headers().get("Host") + request.getUri();
 
 		if (logger.isInfoEnabled()) {
 			logger.info("forward to server:" + url);
@@ -554,9 +579,10 @@ public class StubhubHttpProxy {
 
 						@Override
 						public void channelRead0(ChannelHandlerContext ctx2, HttpObject msg) throws Exception {
-							// logger.info("<<<<<<<<<<<<");
-							// logger.info(msg);
-							// logger.info("<<<<<<<<<<<<");
+							if (logger.isDebugEnabled()) {
+								logger.debug("\n>>>>>>>>>>>>>\n" + "after forward " + url + ", server receive:"
+										+ "\n>>>>>>>>>>>>>\n" + msg + "\n>>>>>>>>>>>>>\n");
+							}
 
 							if (msg instanceof HttpResponse) {
 								HttpResponse response = (HttpResponse) msg;
@@ -598,10 +624,10 @@ public class StubhubHttpProxy {
 
 			// Send the HTTP request.
 			FullHttpRequest req0 = ((DefaultFullHttpRequest) request).copy();
-			req0.setUri("https://" + host + request.getUri());
 
 			if (logger.isDebugEnabled()) {
-				logger.debug("access " + req0.getUri());
+				logger.debug("\n>>>>>>>>>>>>>\n" + "forward to the real server:" + "\n>>>>>>>>>>>>>\n" + req0
+						+ "\n>>>>>>>>>>>>>\n");
 			}
 
 			ch.writeAndFlush(req0);
@@ -643,7 +669,7 @@ public class StubhubHttpProxy {
 			@Override
 			protected void channelRead0(final ChannelHandlerContext httpsServerConnectionContext, Object msg) {
 				if (logger.isDebugEnabled()) {
-					logger.debug("\n>>>>>>>>>>>>>\n" + "http(s) server receive:" + "\n>>>>>>>>>>>>>\n" + msg
+					logger.debug("\n>>>>>>>>>>>>>\n" + "internal https server receive:" + "\n>>>>>>>>>>>>>\n" + msg
 							+ "\n>>>>>>>>>>>>>\n");
 				}
 
@@ -656,7 +682,8 @@ public class StubhubHttpProxy {
 						return;
 					}
 
-					HttpResponse handleRequestBySelf = handleRequestBySelf(request);
+					HttpResponse handleRequestBySelf = handleRequestBySelf(new Context().setRequest(request)
+							.setUsingHttps(true));
 
 					if (handleRequestBySelf != null) {
 						httpsServerConnectionContext.writeAndFlush(handleRequestBySelf);
@@ -670,7 +697,7 @@ public class StubhubHttpProxy {
 							FullHttpResponse response = ((FullHttpResponse) resp).copy();
 							setProxyHeader(response);
 							if (logger.isDebugEnabled()) {
-								logger.debug("\n<<<<<<<<<<<\n" + "http(s) server sent back:" + "\n<<<<<<<<<<<\n"
+								logger.debug("\n<<<<<<<<<<<\n" + "internal https server sent back:" + "\n<<<<<<<<<<<\n"
 										+ response + "\n<<<<<<<<<<<\n");
 							}
 							httpsServerConnectionContext.writeAndFlush(response);

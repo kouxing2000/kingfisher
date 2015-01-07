@@ -13,4 +13,15 @@ public class Context {
 		this.request = request;
 		return this;
 	}
+	
+	private boolean usingHttps;
+
+	public boolean isUsingHttps() {
+		return usingHttps;
+	}
+
+	public Context setUsingHttps(boolean usingHttps) {
+		this.usingHttps = usingHttps;
+		return this;
+	}
 }
