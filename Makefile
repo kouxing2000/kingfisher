@@ -1,5 +1,5 @@
 VERSION=1.0.0
-PROXY_JAR=kingfisher-${VERSION}-SNAPSHOT-jar-with-dependencies.jar
+PROXY_JAR=kingfisher-${VERSION}-jar-with-dependencies.jar
 SAMPLE_CONFIG=./src/main/resources/stubhubproxy.config.json
 CONFIG_FILE=./config.json
 
