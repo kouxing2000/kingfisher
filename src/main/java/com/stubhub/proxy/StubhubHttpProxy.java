@@ -36,6 +36,8 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -116,7 +118,7 @@ public class StubhubHttpProxy {
 		if (urlWithoutHttpPrefix.startsWith("http")) {
 			urlWithoutHttpPrefix = urlWithoutHttpPrefix.substring(urlWithoutHttpPrefix.indexOf("//") + 2);
 		} else {
-			urlWithoutHttpPrefix = httpRequest.headers().get("Host") + urlWithoutHttpPrefix;
+			urlWithoutHttpPrefix = httpRequest.headers().get(HttpHeaders.Names.HOST) + urlWithoutHttpPrefix;
 		}
 
 		// logger.info("URL:" + url);
@@ -131,14 +133,14 @@ public class StubhubHttpProxy {
 
 				try {
 
-					logger.info("handle by proxy =>" + urlWithoutHttpPrefix);
+					if (logger.isInfoEnabled()) {
+						logger.info("handle by proxy =>" + urlWithoutHttpPrefix);
+					}
 
 					Object value = e.getValue();
 
 					if (value instanceof HttpResponseBuilder) {
-
 						httpResponse = ((HttpResponseBuilder) value).build();
-
 					} else if (value instanceof String) {
 						URLResolver resolver = localResolver;
 
@@ -151,9 +153,13 @@ public class StubhubHttpProxy {
 							for (Map.Entry<String, Integer> me : namedGroupMapping.entrySet()) {
 								String groupValue = matcher.group(me.getValue());
 								realUrl = realUrl.replaceAll(me.getKey(), groupValue);
-								logger.debug("replace named group from {} to {}", me.getKey(), groupValue);
+								if (logger.isDebugEnabled()) {
+									logger.debug("replace named group from {} to {}", me.getKey(), groupValue);
+								}
 							}
-							logger.info("after replace all named group, url from {} to {}", oldUrl, realUrl);
+							if (logger.isInfoEnabled()) {
+								logger.info("after replace all named group, url from {} to {}", oldUrl, realUrl);
+							}
 						}
 
 						if (realUrl.startsWith("http")) {
@@ -166,12 +172,12 @@ public class StubhubHttpProxy {
 						httpResponse = ((URLResolver) value).read((context.isUsingHttps() ? "https://" : "http://")
 								+ urlWithoutHttpPrefix, context);
 					} else {
-						logger.error("not support {}", value);
+						logger.error("Internal error, not support {}", value);
 					}
 
 				} catch (Exception exp) {
 
-					String inCaseFailed = "failed to handle!!! debug info:\n";
+					String inCaseFailed = "Failed to handle!!! debug info:\n";
 
 					inCaseFailed += "match by pattern:[" + pattern + "]\n";
 					inCaseFailed += " map to:[" + e.getValue() + "]\n";
@@ -218,7 +224,7 @@ public class StubhubHttpProxy {
 	}
 
 	private String fillVariable(String value, Map<String, String> variables) {
-		// TODO using string pattern to replace
+		// TODO using pattern to replace
 		for (Map.Entry<String, String> e : variables.entrySet()) {
 			value = value.replace("${" + e.getKey() + "}", e.getValue());
 		}
@@ -254,14 +260,20 @@ public class StubhubHttpProxy {
 					public void run() {
 						try {
 							if (configFile.lastModified() > lastConfigFileModifiedTS) {
-								logger.info("detect config file {} changed", configFile.getAbsolutePath());
+								if (logger.isInfoEnabled()) {
+									logger.info("Detect config file {} changed, reloading...",
+											configFile.getAbsolutePath());
+								}
 								Config config = new Gson().fromJson(FileUtils.readFileToString(configFile),
 										Config.class);
 								proxy.loadConfig(config);
 								lastConfigFileModifiedTS = configFile.lastModified();
+								if (logger.isInfoEnabled()) {
+									logger.info("Reloading complete");
+								}
 							}
 						} catch (Exception e) {
-							e.printStackTrace();
+							logger.error("reload config", e);
 						}
 					}
 				}, 5, 5, TimeUnit.SECONDS);
@@ -270,7 +282,7 @@ public class StubhubHttpProxy {
 					config = new Gson().fromJson(FileUtils.readFileToString(configFile), Config.class);
 					lastConfigFileModifiedTS = configFile.lastModified();
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Failed to load config, abort!", e);
 					return;
 				}
 			} else {
@@ -278,7 +290,7 @@ public class StubhubHttpProxy {
 			}
 
 		} else {
-			logger.error("Usage: java -jar porxy.jar <config file name>, use default config");
+			logger.error("Usage: java -jar porxy.jar <config file name>, use default config for this time");
 		}
 
 		if (config == null) {
@@ -331,8 +343,8 @@ public class StubhubHttpProxy {
 			};
 		};
 
-		HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withAllowLocalOnly(false).withListenOnAllAddresses(true).withPort(config.getProxyPort())
-				.withFiltersSource(filtersSource);
+		HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withAllowLocalOnly(false)
+				.withListenOnAllAddresses(true).withPort(config.getProxyPort()).withFiltersSource(filtersSource);
 
 		if (!config.getChainedProxies().isEmpty()) {
 			bootstrap.withChainProxyManager(new ChainedProxyManager() {
@@ -426,7 +438,7 @@ public class StubhubHttpProxy {
 			for (Map.Entry<String, String> e : config.getHandlers().entrySet()) {
 				try {
 					Class<?> clazz = Class.forName(e.getValue());
-					logger.info("read handler: {} for {}", clazz, e.getKey());
+					logger.info("load handler: {} for {}", clazz, e.getKey());
 					if (URLResolver.class.isAssignableFrom(clazz)) {
 						String sourceURL = addSourceUrls(e.getKey());
 						urlMappings.put(Pattern.compile(ProxyUtils.wildcardToRegex(sourceURL)), clazz.newInstance());
@@ -474,50 +486,41 @@ public class StubhubHttpProxy {
 
 	EventLoopGroup bossGroup = new NioEventLoopGroup(1);
 	EventLoopGroup workerGroup = new NioEventLoopGroup();
-
-	private Thread inernalHttpsThread;
+	Channel internalHttpsBindChannel;
+	ServerBootstrap internalHttpsServerBootstrap = new ServerBootstrap();
 
 	private void startHttpsInternalServer() {
-		inernalHttpsThread = new Thread() {
-			public void run() {
-				try {
-					ServerBootstrap b = new ServerBootstrap();
-					b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-							.childHandler(new ChannelInitializer<SocketChannel>() {
-								@Override
-								public void initChannel(SocketChannel ch) throws Exception {
-									// Create a default pipeline implementation.
-									ChannelPipeline p = ch.pipeline();
+		try {
+			internalHttpsServerBootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+					.childHandler(new ChannelInitializer<SocketChannel>() {
+						@Override
+						public void initChannel(SocketChannel ch) throws Exception {
+							// Create a default pipeline implementation.
+							ChannelPipeline p = ch.pipeline();
 
-									// Uncomment the following line if you want
-									// HTTPS
-									SSLEngine engine = sslContext.createSSLEngine();
-									engine.setUseClientMode(false);
-									p.addLast("ssl", new SslHandler(engine));
+							// Uncomment the following line if you want
+							// HTTPS
+							SSLEngine engine = sslContext.createSSLEngine();
+							engine.setUseClientMode(false);
+							p.addLast("ssl", new SslHandler(engine));
 
-									p.addLast("decoder", new HttpRequestDecoder());
-									// Uncomment the following line if you don't
-									// want to handle HttpChunks.
-									p.addLast("aggregator", new HttpObjectAggregator(1048576));
-									p.addLast("encoder", new HttpResponseEncoder());
-									// Remove the following line if you don't
-									// want automatic content compression.
-									p.addLast("deflater", new HttpContentCompressor());
-									p.addLast("handler", createHandlerForInternalServer());
-								}
-							});
+							p.addLast("decoder", new HttpRequestDecoder());
+							// Uncomment the following line if you don't
+							// want to handle HttpChunks.
+							p.addLast("aggregator", new HttpObjectAggregator(1048576));
+							p.addLast("encoder", new HttpResponseEncoder());
+							// Remove the following line if you don't
+							// want automatic content compression.
+							p.addLast("deflater", new HttpContentCompressor());
+							p.addLast("handler", createHandlerForInternalServer());
+						}
+					});
 
-					Channel ch = b.bind(HTTPS_SERVER_INTERNAL_PORT).sync().channel();
-					// ch.closeFuture().sync();
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					// bossGroup.shutdownGracefully();
-					// workerGroup.shutdownGracefully();
-				}
-			};
-		};
-		inernalHttpsThread.start();
+			internalHttpsBindChannel = internalHttpsServerBootstrap.bind(HTTPS_SERVER_INTERNAL_PORT).sync().channel();
+
+		} catch (Exception e) {
+			logger.error("", e);
+		}
 	}
 
 	String identifyHostAndPort(HttpRequest httpRequest) {
@@ -536,71 +539,78 @@ public class StubhubHttpProxy {
 		void handle(HttpResponse response);
 	}
 
+	final Bootstrap clientBoostrap = new Bootstrap();
 	final EventLoopGroup clientGroup = new NioEventLoopGroup();
 
+	final static AttributeKey<HttpRequest> HttpRequestKey = AttributeKey.valueOf("HttpRequest");
+	final static AttributeKey<ResponseCallback> ResponseCallbackKey = AttributeKey.valueOf("ResponseCallback");
+
+	{
+		clientBoostrap.group(clientGroup);
+
+		clientBoostrap.channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>() {
+
+			@Override
+			public void initChannel(SocketChannel ch) throws Exception {
+				// Create a default pipeline implementation.
+				ChannelPipeline p = ch.pipeline();
+
+				// p.addLast("log", new LoggingHandler(LogLevel.INFO));
+
+				// Enable HTTPS if necessary.
+				SSLEngine engine = sslContext.createSSLEngine();
+				engine.setUseClientMode(true);
+
+				p.addLast("ssl", new SslHandler(engine));
+
+				p.addLast("codec", new HttpClientCodec());
+
+				// Remove the following line if you don't want automatic
+				// content decompression.
+				p.addLast("inflater", new HttpContentDecompressor());
+
+				// Uncomment the following line if you don't want to handle
+				// HttpChunks.
+				p.addLast("aggregator", new HttpObjectAggregator(1048576));
+
+				p.addLast("handler", new SimpleChannelInboundHandler<HttpObject>() {
+
+					@Override
+					public void channelRead0(ChannelHandlerContext ctx2, HttpObject msg) throws Exception {
+						if (logger.isDebugEnabled()) {
+							HttpRequest httpRequest = ctx2.channel().attr(HttpRequestKey).get();
+							logger.debug("\n>>>>>>>>>>>>>\n" + "server receive response from "
+									+ httpRequest.headers().get(HttpHeaders.Names.HOST) + httpRequest.getUri()
+									+ "\n>>>>>>>>>>>>>\n" + msg + "\n>>>>>>>>>>>>>\n");
+						}
+
+						if (msg instanceof HttpResponse) {
+							HttpResponse response = (HttpResponse) msg;
+							ctx2.channel().attr(ResponseCallbackKey).get().handle(response);
+							ctx2.close();
+						}
+
+					}
+
+					@Override
+					public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+						cause.printStackTrace();
+						ctx.close();
+					}
+				});
+			}
+		});
+	}
+
 	private void forwardHttpRequestToRealServer(final HttpRequest request, final ResponseCallback calback) {
-		final String url = request.headers().get("Host") + request.getUri();
+		final String url = request.headers().get(HttpHeaders.Names.HOST) + request.getUri();
 
 		if (logger.isInfoEnabled()) {
 			logger.info("forward to server:" + url);
 		}
 
 		// Configure the client.
-		// TODO reuse?
-		final Bootstrap clientBoostrap = new Bootstrap();
 		try {
-			clientBoostrap.group(clientGroup);
-			clientBoostrap.channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>() {
-
-				@Override
-				public void initChannel(SocketChannel ch) throws Exception {
-					// Create a default pipeline implementation.
-					ChannelPipeline p = ch.pipeline();
-
-					// p.addLast("log", new LoggingHandler(LogLevel.INFO));
-
-					// Enable HTTPS if necessary.
-					SSLEngine engine = sslContext.createSSLEngine();
-					engine.setUseClientMode(true);
-
-					p.addLast("ssl", new SslHandler(engine));
-
-					p.addLast("codec", new HttpClientCodec());
-
-					// Remove the following line if you don't want automatic
-					// content decompression.
-					p.addLast("inflater", new HttpContentDecompressor());
-
-					// Uncomment the following line if you don't want to handle
-					// HttpChunks.
-					p.addLast("aggregator", new HttpObjectAggregator(1048576));
-
-					p.addLast("handler", new SimpleChannelInboundHandler<HttpObject>() {
-
-						@Override
-						public void channelRead0(ChannelHandlerContext ctx2, HttpObject msg) throws Exception {
-							if (logger.isDebugEnabled()) {
-								logger.debug("\n>>>>>>>>>>>>>\n" + "after forward " + url + ", server receive:"
-										+ "\n>>>>>>>>>>>>>\n" + msg + "\n>>>>>>>>>>>>>\n");
-							}
-
-							if (msg instanceof HttpResponse) {
-								HttpResponse response = (HttpResponse) msg;
-								calback.handle(response);
-								ctx2.close();
-							}
-
-						}
-
-						@Override
-						public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-							cause.printStackTrace();
-							ctx.close();
-						}
-					});
-				}
-			});
-
 			String hostAndPort = identifyHostAndPort(request);
 
 			String host;
@@ -619,8 +629,11 @@ public class StubhubHttpProxy {
 			}
 
 			// Make the connection attempt.
-			// TODO : reuse channel
-			Channel ch = clientBoostrap.connect(host, port).sync().channel();
+			// TODO2 : reuse channel?
+			Channel channel = clientBoostrap.connect(host, port).sync().channel();
+
+			channel.attr(HttpRequestKey).set(request);
+			channel.attr(ResponseCallbackKey).set(calback);
 
 			// Send the HTTP request.
 			FullHttpRequest req0 = ((DefaultFullHttpRequest) request).copy();
@@ -630,15 +643,12 @@ public class StubhubHttpProxy {
 						+ "\n>>>>>>>>>>>>>\n");
 			}
 
-			ch.writeAndFlush(req0);
+			channel.writeAndFlush(req0);
 
 			// Wait for the server to close the connection.
-			// ch.closeFuture().sync();
+			channel.closeFuture().sync();
 		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			// Shut down executor threads to exit.
-			// clientGroup.shutdownGracefully();
+			logger.error("", e);
 		}
 	}
 
@@ -650,11 +660,11 @@ public class StubhubHttpProxy {
 		try {
 			proxyServer.stop();
 			clientGroup.shutdownGracefully();
-			inernalHttpsThread.interrupt();
+			internalHttpsBindChannel.closeFuture().sync();
 			bossGroup.shutdownGracefully();
 			workerGroup.shutdownGracefully();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("when stop", e);
 		}
 	}
 

@@ -43,6 +43,7 @@
         <level value="debug"/>
     </logger>
     <root>
+    	<!-- change it to debug if you want detail log -->
         <level value="info"/>
         <appender-ref ref="ASYNC"/>
     </root>

@@ -30,8 +30,8 @@ public class PseudolocalizationHandler extends InternetFileResolver {
 	private static final char[] charsNew1 = "ÂßÇÐÉFGHÌJK£MNÓÞQR§TÛVWXÝZáβçδèƒϱλïJƙℓ₥ñôƥ9řƨƭúƲωж¥ƺ".toCharArray();
 	// from pseudolocalize_char
 	private static final char[] charsNew2 = "ÅβĈĐЄΓĞĦЇĵĶŁḾŃΘρqЯȘŦŨνẄ×¥ŽăτċďęƒĝћϊĵĸĺḿиόρQґšтΰVẅхỳź".toCharArray();
-	// mine combined one
-	private static final char[] charsNew3 = "ÅβĈĐЄӺĞĦЇĵĶŁḾŃÓᕉᕌᖇȘŦŨᐺẄ×¥Žăᑳċďęƒĝћϊĵƙℓḿñόᑶᑵґšƭΰᐌẅхỳź".toCharArray();
+	// mine combined one - http://www.utf8-chartable.de/unicode-utf8-table.pl
+	private static final char[] charsNew3 = "ÅβĈĐЀӺĞĤЇĵќĹḾŃÓᕉᕌȒŚŤŨᐺẄӼÝŽăᑳċďęƒĝȟϊĵƙĺḿñόƥɋґšťΰᏉẅӽỳź".toCharArray();
 
 	// (\"[^\"]*?\s+?[^\"]+?\"|\"[A-Z][a-z]+?\")
 	// http://jex.im/regulex/#!embed=false&flags=&re=(%5C%22%5B%5E%5C%22%5D*%3F%5Cs%2B%3F%5B%5E%5C%22%5D%2B%3F%5C%22%7C%5C%22%5BA-Z%5D%5Ba-z%5D%2B%3F%5C%22)
@@ -219,6 +219,10 @@ public class PseudolocalizationHandler extends InternetFileResolver {
 		for (int i = 0; i < length; i++) {
 			char o = charsOld[i];
 			System.out.print(pseudolocalize_char(o));
+		}
+		System.out.println();
+		for (int i = 0; i < length; i++) {
+			System.out.print(charsNew3[i]);
 		}
 	}
 }
