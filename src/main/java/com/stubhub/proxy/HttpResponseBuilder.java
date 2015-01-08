@@ -100,7 +100,6 @@ public class HttpResponseBuilder {
 			try {
 				Thread.sleep(delayMS);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
 

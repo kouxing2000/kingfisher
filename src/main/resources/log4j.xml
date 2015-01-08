@@ -33,6 +33,9 @@
     <logger name="io.netty">
         <level value="info"/>
     </logger>
+    <logger name="org.apache.http">
+        <level value="info"/>
+    </logger>
     <logger name="org.littleshoot.proxy">
         <level value="info"/>
     </logger>
@@ -43,7 +46,7 @@
         <level value="debug"/>
     </logger>
     <root>
-    	<!-- change it to debug if you want detail log -->
+    	<!-- change it to debug/trace if you want detail log -->
         <level value="info"/>
         <appender-ref ref="ASYNC"/>
     </root>

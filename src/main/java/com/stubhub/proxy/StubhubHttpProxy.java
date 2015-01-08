@@ -84,6 +84,8 @@ import com.stubhub.proxy.resolver.LocalFileResolver;
 
 public class StubhubHttpProxy {
 
+	private static final String HTTPS_SERVER_INTERNAL_HOST = "127.0.0.78";
+
 	private static final String NAMED_GROUP = "<\\w+?>";
 
 	private static final String DEFAULT_CONFIG_JSON = "stubhubproxy.config.json";
@@ -104,10 +106,13 @@ public class StubhubHttpProxy {
 	private final URLResolver localResolver = new LocalFileResolver();
 	private final URLResolver internetResolver = new InternetFileResolver();
 
+	/**
+	 * 
+	 * @param context
+	 * @return null means cannot handle by self
+	 */
 	private HttpResponse handleRequestBySelf(Context context) {
 		HttpRequest httpRequest = context.getRequest();
-
-		// logger.info(httpRequest.toString());
 
 		if (ProxyUtils.isCONNECT(httpRequest) && !httpRequest.getUri().contains("/")) {
 			// https
@@ -120,8 +125,6 @@ public class StubhubHttpProxy {
 		} else {
 			urlWithoutHttpPrefix = httpRequest.headers().get(HttpHeaders.Names.HOST) + urlWithoutHttpPrefix;
 		}
-
-		// logger.info("URL:" + url);
 
 		for (Map.Entry<Pattern, Object> e : urlMappings.entrySet()) {
 			Pattern pattern = e.getKey();
@@ -238,8 +241,7 @@ public class StubhubHttpProxy {
 	// <Pattern, <group_name, group_id>>
 	final Map<Pattern, Map<String, Integer>> urlMappingNamedGroupMappings = new HashMap<Pattern, Map<String, Integer>>();
 
-	static final ScheduledExecutorService newSingleThreadScheduledExecutor = Executors
-			.newSingleThreadScheduledExecutor();
+	static final ScheduledExecutorService jobScheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
 	static long lastConfigFileModifiedTS = 0;
 
@@ -254,7 +256,7 @@ public class StubhubHttpProxy {
 			final File configFile = new File(args[0]);
 
 			if (configFile.exists()) {
-				newSingleThreadScheduledExecutor.scheduleAtFixedRate(new Runnable() {
+				jobScheduledExecutor.scheduleAtFixedRate(new Runnable() {
 
 					@Override
 					public void run() {
@@ -319,8 +321,10 @@ public class StubhubHttpProxy {
 				return new HttpFiltersAdapter(originalRequest) {
 					@Override
 					public HttpResponse requestPre(HttpObject httpObject) {
-						// logger.info("\n----------->" + httpObject.toString()
-						// + ">-----------");
+
+						if (logger.isTraceEnabled()) {
+							logEvent("[proxy] requestPre:", httpObject);
+						}
 
 						if (httpObject instanceof HttpRequest) {
 							return handleRequestBySelf(new Context().setRequest((HttpRequest) httpObject)
@@ -331,12 +335,14 @@ public class StubhubHttpProxy {
 					}
 
 					public HttpObject responsePre(HttpObject httpObject) {
-						// logger.info("\n-----------<" + httpObject.toString()
-						// + "<-----------");
+						if (logger.isTraceEnabled()) {
+							logEvent("[proxy] responsePre:", httpObject);
+						}
 
 						if (httpObject instanceof HttpResponse) {
 							setProxyHeader((HttpResponse) httpObject);
 						}
+
 						return httpObject;
 					};
 				};
@@ -353,7 +359,7 @@ public class StubhubHttpProxy {
 
 					if (!httpRequest.headers().contains(Constants.HEADER_FLAG_NO_PROXY)) {
 						for (final Proxy proxy : config.getChainedProxies()) {
-							String host = httpRequest.headers().get("Host");
+							String host = httpRequest.headers().get(HttpHeaders.Names.HOST);
 
 							if (proxy.isAllowed(host)) {
 								chainedProxies.add(proxy.getChainedProxy());
@@ -380,7 +386,7 @@ public class StubhubHttpProxy {
 	private void loadConfig(Config configIn) {
 		this.config = configIn;
 
-		{
+		if (config.getVariables() != null) {
 			// handle variable using another variable case
 			Map<String, String> variables = config.getVariables();
 			for (int i = 0; i < 10; i++) {
@@ -446,7 +452,7 @@ public class StubhubHttpProxy {
 						logger.error("{} is not sub-type of {}", clazz, URLResolver.class);
 					}
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					logger.error("", e);
 				}
 			}
 		}
@@ -471,7 +477,8 @@ public class StubhubHttpProxy {
 			if (!hostAndPort.contains(":")) {
 				hostAndPort = hostAndPort + ":443";
 			}
-			ClientToProxyConnection.addHttpsHostPortMapping(hostAndPort, "localhost:" + HTTPS_SERVER_INTERNAL_PORT);
+			ClientToProxyConnection.addHttpsHostPortMapping(hostAndPort, HTTPS_SERVER_INTERNAL_HOST + ":"
+					+ HTTPS_SERVER_INTERNAL_PORT);
 		} else {
 
 		}
@@ -484,10 +491,10 @@ public class StubhubHttpProxy {
 		return sourceURL;
 	}
 
-	EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-	EventLoopGroup workerGroup = new NioEventLoopGroup();
-	Channel internalHttpsBindChannel;
-	ServerBootstrap internalHttpsServerBootstrap = new ServerBootstrap();
+	private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+	private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+	private Channel internalHttpsBindChannel;
+	private final ServerBootstrap internalHttpsServerBootstrap = new ServerBootstrap();
 
 	private void startHttpsInternalServer() {
 		try {
@@ -498,25 +505,20 @@ public class StubhubHttpProxy {
 							// Create a default pipeline implementation.
 							ChannelPipeline p = ch.pipeline();
 
-							// Uncomment the following line if you want
-							// HTTPS
 							SSLEngine engine = sslContext.createSSLEngine();
 							engine.setUseClientMode(false);
 							p.addLast("ssl", new SslHandler(engine));
 
 							p.addLast("decoder", new HttpRequestDecoder());
-							// Uncomment the following line if you don't
-							// want to handle HttpChunks.
 							p.addLast("aggregator", new HttpObjectAggregator(1048576));
 							p.addLast("encoder", new HttpResponseEncoder());
-							// Remove the following line if you don't
-							// want automatic content compression.
 							p.addLast("deflater", new HttpContentCompressor());
 							p.addLast("handler", createHandlerForInternalServer());
 						}
 					});
 
-			internalHttpsBindChannel = internalHttpsServerBootstrap.bind(HTTPS_SERVER_INTERNAL_PORT).sync().channel();
+			internalHttpsBindChannel = internalHttpsServerBootstrap
+					.bind(HTTPS_SERVER_INTERNAL_HOST, HTTPS_SERVER_INTERNAL_PORT).sync().channel();
 
 		} catch (Exception e) {
 			logger.error("", e);
@@ -539,11 +541,11 @@ public class StubhubHttpProxy {
 		void handle(HttpResponse response);
 	}
 
-	final Bootstrap clientBoostrap = new Bootstrap();
-	final EventLoopGroup clientGroup = new NioEventLoopGroup();
+	private final Bootstrap clientBoostrap = new Bootstrap();
+	private final EventLoopGroup clientGroup = new NioEventLoopGroup();
 
-	final static AttributeKey<HttpRequest> HttpRequestKey = AttributeKey.valueOf("HttpRequest");
-	final static AttributeKey<ResponseCallback> ResponseCallbackKey = AttributeKey.valueOf("ResponseCallback");
+	private final static AttributeKey<HttpRequest> HttpRequestKey = AttributeKey.valueOf("HttpRequest");
+	private final static AttributeKey<ResponseCallback> ResponseCallbackKey = AttributeKey.valueOf("ResponseCallback");
 
 	{
 		clientBoostrap.group(clientGroup);
@@ -565,12 +567,10 @@ public class StubhubHttpProxy {
 
 				p.addLast("codec", new HttpClientCodec());
 
-				// Remove the following line if you don't want automatic
-				// content decompression.
+				// automatic content decompression.
 				p.addLast("inflater", new HttpContentDecompressor());
 
-				// Uncomment the following line if you don't want to handle
-				// HttpChunks.
+				// handle HttpChunks.
 				p.addLast("aggregator", new HttpObjectAggregator(1048576));
 
 				p.addLast("handler", new SimpleChannelInboundHandler<HttpObject>() {
@@ -579,9 +579,7 @@ public class StubhubHttpProxy {
 					public void channelRead0(ChannelHandlerContext ctx2, HttpObject msg) throws Exception {
 						if (logger.isDebugEnabled()) {
 							HttpRequest httpRequest = ctx2.channel().attr(HttpRequestKey).get();
-							logger.debug("\n>>>>>>>>>>>>>\n" + "server receive response from "
-									+ httpRequest.headers().get(HttpHeaders.Names.HOST) + httpRequest.getUri()
-									+ "\n>>>>>>>>>>>>>\n" + msg + "\n>>>>>>>>>>>>>\n");
+							logEvent("[internal client] receive", httpRequest, msg);
 						}
 
 						if (msg instanceof HttpResponse) {
@@ -602,11 +600,11 @@ public class StubhubHttpProxy {
 		});
 	}
 
-	private void forwardHttpRequestToRealServer(final HttpRequest request, final ResponseCallback calback) {
+	void forwardHttpRequestToRealServer(final HttpRequest request, final ResponseCallback calback) {
 		final String url = request.headers().get(HttpHeaders.Names.HOST) + request.getUri();
 
 		if (logger.isInfoEnabled()) {
-			logger.info("forward to server:" + url);
+			logger.info("forward to real server:" + url);
 		}
 
 		// Configure the client.
@@ -632,21 +630,23 @@ public class StubhubHttpProxy {
 			// TODO2 : reuse channel?
 			Channel channel = clientBoostrap.connect(host, port).sync().channel();
 
+			// bind the related to channel
 			channel.attr(HttpRequestKey).set(request);
 			channel.attr(ResponseCallbackKey).set(calback);
 
-			// Send the HTTP request.
+			// Send the HTTP request (copied)
 			FullHttpRequest req0 = ((DefaultFullHttpRequest) request).copy();
 
 			if (logger.isDebugEnabled()) {
-				logger.debug("\n>>>>>>>>>>>>>\n" + "forward to the real server:" + "\n>>>>>>>>>>>>>\n" + req0
-						+ "\n>>>>>>>>>>>>>\n");
+				logEvent("[internal client] send", req0);
 			}
 
 			channel.writeAndFlush(req0);
 
+			// no need the following, because async
 			// Wait for the server to close the connection.
-			channel.closeFuture().sync();
+			// channel.closeFuture().sync();
+
 		} catch (Exception e) {
 			logger.error("", e);
 		}
@@ -679,24 +679,26 @@ public class StubhubHttpProxy {
 			@Override
 			protected void channelRead0(final ChannelHandlerContext httpsServerConnectionContext, Object msg) {
 				if (logger.isDebugEnabled()) {
-					logger.debug("\n>>>>>>>>>>>>>\n" + "internal https server receive:" + "\n>>>>>>>>>>>>>\n" + msg
-							+ "\n>>>>>>>>>>>>>\n");
+					logEvent("[internal https server] receive", msg);
 				}
 
 				if (msg instanceof HttpRequest) {
 
-					HttpRequest request = (HttpRequest) msg;
+					final HttpRequest request = (HttpRequest) msg;
 
 					if (is100ContinueExpected(request)) {
 						send100Continue(httpsServerConnectionContext);
 						return;
 					}
 
-					HttpResponse handleRequestBySelf = handleRequestBySelf(new Context().setRequest(request)
+					HttpResponse httpResponse = handleRequestBySelf(new Context().setRequest(request)
 							.setUsingHttps(true));
 
-					if (handleRequestBySelf != null) {
-						httpsServerConnectionContext.writeAndFlush(handleRequestBySelf);
+					if (httpResponse != null) {
+						httpsServerConnectionContext.writeAndFlush(httpResponse);
+						if (logger.isDebugEnabled()) {
+							logEvent("[internal https server] send response", request, httpResponse);
+						}
 						return;
 					}
 
@@ -707,8 +709,7 @@ public class StubhubHttpProxy {
 							FullHttpResponse response = ((FullHttpResponse) resp).copy();
 							setProxyHeader(response);
 							if (logger.isDebugEnabled()) {
-								logger.debug("\n<<<<<<<<<<<\n" + "internal https server sent back:" + "\n<<<<<<<<<<<\n"
-										+ response + "\n<<<<<<<<<<<\n");
+								logEvent("[internal https server] forward response", request, response);
 							}
 							httpsServerConnectionContext.writeAndFlush(response);
 						}
@@ -728,5 +729,28 @@ public class StubhubHttpProxy {
 				ctx.close();
 			}
 		};
+	}
+
+	private static final String logPrefix = "    ";
+
+	private static void logEvent(String title, Object message) {
+		if (message instanceof HttpRequest) {
+			HttpRequest request = (HttpRequest) message;
+			logEvent(title, request, request);
+		} else {
+			logEvent(title, null, message);
+		}
+	}
+
+	private static void logEvent(String title, HttpRequest request) {
+		logEvent(title, request, request);
+	}
+
+	private static void logEvent(String title, HttpRequest request, Object message) {
+		String msg = message.toString();
+		msg = logPrefix + msg.replace("\n", "\n" + logPrefix);
+		logger.debug("\n>>>>>>>>>>>>>\n"
+				+ title + (request != null ? (" <" + request.headers().get(HttpHeaders.Names.HOST) + request
+						.getUri() + ">") : "") + "\n>>>>>>>>>>>>>\n" + msg + "\n<<<<<<<<<<<<<<<\n");
 	}
 }
