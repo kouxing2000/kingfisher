@@ -36,7 +36,6 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.ssl.SslHandler;
-import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 
 import java.io.ByteArrayOutputStream;
@@ -46,7 +45,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,9 +76,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.stubhub.proxy.Config.Proxy;
+import com.stubhub.proxy.config.Config;
+import com.stubhub.proxy.config.HandlerConfig;
+import com.stubhub.proxy.config.HttpResponseBuilder;
+import com.stubhub.proxy.config.ProxyConfig;
+import com.stubhub.proxy.custom.CustomHandler;
 import com.stubhub.proxy.resolver.InternetFileResolver;
 import com.stubhub.proxy.resolver.LocalFileResolver;
+import com.stubhub.proxy.resolver.URLResolver;
 
 public class StubhubHttpProxy {
 
@@ -358,7 +361,7 @@ public class StubhubHttpProxy {
 				public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
 
 					if (!httpRequest.headers().contains(Constants.HEADER_FLAG_NO_PROXY)) {
-						for (final Proxy proxy : config.getChainedProxies()) {
+						for (final ProxyConfig proxy : config.getChainedProxies()) {
 							String host = httpRequest.headers().get(HttpHeaders.Names.HOST);
 
 							if (proxy.isAllowed(host)) {
@@ -441,15 +444,17 @@ public class StubhubHttpProxy {
 		}
 
 		if (config.getHandlers() != null) {
-			for (Map.Entry<String, String> e : config.getHandlers().entrySet()) {
+			for (Map.Entry<String, HandlerConfig> e : config.getHandlers().entrySet()) {
 				try {
-					Class<?> clazz = Class.forName(e.getValue());
+					Class<?> clazz = Class.forName(e.getValue().getClassName());
 					logger.info("load handler: {} for {}", clazz, e.getKey());
-					if (URLResolver.class.isAssignableFrom(clazz)) {
+					if (CustomHandler.class.isAssignableFrom(clazz)) {
 						String sourceURL = addSourceUrls(e.getKey());
-						urlMappings.put(Pattern.compile(ProxyUtils.wildcardToRegex(sourceURL)), clazz.newInstance());
+						CustomHandler newInstance = (CustomHandler) (clazz.newInstance());
+						newInstance.initial(e.getValue().getParameters());
+						urlMappings.put(Pattern.compile(ProxyUtils.wildcardToRegex(sourceURL)), newInstance);
 					} else {
-						logger.error("{} is not sub-type of {}", clazz, URLResolver.class);
+						logger.error("{} is not sub-type of {}", clazz, CustomHandler.class);
 					}
 				} catch (Exception ex) {
 					logger.error("", e);
@@ -643,7 +648,7 @@ public class StubhubHttpProxy {
 
 			channel.writeAndFlush(req0);
 
-			// no need the following, because async
+			// no need the following, because of async mode
 			// Wait for the server to close the connection.
 			// channel.closeFuture().sync();
 
@@ -695,6 +700,7 @@ public class StubhubHttpProxy {
 							.setUsingHttps(true));
 
 					if (httpResponse != null) {
+						// OK, we are not a pure PROXY, we did some thing which belong to server
 						httpsServerConnectionContext.writeAndFlush(httpResponse);
 						if (logger.isDebugEnabled()) {
 							logEvent("[internal https server] send response", request, httpResponse);
@@ -702,6 +708,7 @@ public class StubhubHttpProxy {
 						return;
 					}
 
+					// let the real server process it like a real PROXY
 					forwardHttpRequestToRealServer(request, new ResponseCallback() {
 						@Override
 						public void handle(HttpResponse resp) {

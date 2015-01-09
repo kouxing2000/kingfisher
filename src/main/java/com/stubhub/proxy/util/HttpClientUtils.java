@@ -1,4 +1,4 @@
-package com.stubhub.proxy.resolver;
+package com.stubhub.proxy.util;
 
 import java.io.IOException;
 import java.net.Socket;

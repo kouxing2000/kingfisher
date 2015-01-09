@@ -36,7 +36,13 @@
         "http://www.${env}.com/<x>/performer/<id>/<p>" : "http://www.${env}.com/performer-seopoc/?performer_id=<id>"
     },
     "handlers" : {
-        "https://m.slcq001.com/shape/accountmanagement/*" : "com.stubhub.proxy.custom.PseudolocalizationHandler"
+        "https://m.slcq001.com/shape/accountmanagement/*" : {
+           "className" : "com.stubhub.proxy.custom.PseudolocalizationHandler",
+           "parameters": {
+                /* regx for gson value */
+		        "targetTextPatternInRegx": "(\\\"[^\\\"]*?\\s+?[^\\\"]+?\\\"|\\\"[A-Z][a-z]+?\\\")"
+		    }
+        }
     },
     "chainedProxies": [
         {
