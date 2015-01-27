@@ -48,6 +48,7 @@ The tool will be able to start from command line and read a configuration file i
 
 # Other library worth to compare
 
+- [WireMock](http://wiremock.org/)
 - [hoxy](http://greim.github.io/hoxy/)
 - [mock server](http://mock-server.com/)
 - [browsermod proxy](http://bmp.lightbody.net/)
