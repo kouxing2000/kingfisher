@@ -94,7 +94,7 @@ public class StubhubHttpProxy {
 	private static final int HTTP_SERVER_INTERNAL_PORT = 18080;
 
 	private static final String PROXY_BY = "Proxy-By";
-	private static final String STUBHUB_PROXY = "Stubhub-Proxy";
+	private static final String STUBHUB_PROXY = "Kingfish-Web-Debug-Proxy";
 
 	private static final Logger logger = LoggerFactory.getLogger(StubhubHttpProxy.class);
 
