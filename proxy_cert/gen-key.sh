@@ -11,7 +11,7 @@ KEY=proxy.private.key
 CSR=proxy.request.csr
 CRT=proxy.certificate.crt
 PFX=proxy_pkcs12.pfx
-NAME=StubHub-Proxy
+NAME=Kingfish-Web-Debug-Proxy
 CONFIG=openssl.config
 
 openssl genrsa -out ${KEY} 2048
