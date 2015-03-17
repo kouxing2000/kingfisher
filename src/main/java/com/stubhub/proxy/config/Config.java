@@ -19,11 +19,22 @@ public class Config {
 
 	private List<ProxyConfig> chainedProxies;
 
+	private String proxyHost;
+	
 	public Config() {
+		proxyHost = null;
 		proxyPort = 8081;
 		variables = new HashMap<String, String>();
 		mappings = new HashMap<String, String>();
 		chainedProxies = new ArrayList<ProxyConfig>();
+	}
+
+	public String getProxyHost() {
+		return proxyHost;
+	}
+
+	public void setProxyHost(String proxyHost) {
+		this.proxyHost = proxyHost;
 	}
 
 	public int getProxyPort() {

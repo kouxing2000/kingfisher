@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -352,8 +353,15 @@ public class StubhubHttpProxy {
 			};
 		};
 
-		HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withAllowLocalOnly(false)
-				.withListenOnAllAddresses(true).withPort(config.getProxyPort()).withFiltersSource(filtersSource);
+		HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withAllowLocalOnly(false);
+		
+		if (config.getProxyHost() != null) {
+			bootstrap.withAddress(InetSocketAddress.createUnresolved(config.getProxyHost(), config.getProxyPort()));
+		} else {
+			bootstrap.withListenOnAllAddresses(true).withPort(config.getProxyPort());
+		}
+		
+		bootstrap.withFiltersSource(filtersSource);
 
 		if (!config.getChainedProxies().isEmpty()) {
 			bootstrap.withChainProxyManager(new ChainedProxyManager() {
@@ -378,7 +386,7 @@ public class StubhubHttpProxy {
 		proxyServer = bootstrap.start();
 
 		/**
-		 * start a internal https server, proxy forward the https request to it
+		 * start an internal https server, proxy forward the https request to it
 		 */
 		startHttpsInternalServer();
 
@@ -609,7 +617,7 @@ public class StubhubHttpProxy {
 		final String url = request.headers().get(HttpHeaders.Names.HOST) + request.getUri();
 
 		if (logger.isInfoEnabled()) {
-			logger.info("forward to real server:" + url);
+			logger.info("forward request={} to real server" + url);
 		}
 
 		// Configure the client.
@@ -628,7 +636,7 @@ public class StubhubHttpProxy {
 			}
 
 			if (logger.isDebugEnabled()) {
-				logger.debug("connect to " + host + ":" + port);
+				logger.debug("connect to {}:{}", host, port);
 			}
 
 			// Make the connection attempt.
