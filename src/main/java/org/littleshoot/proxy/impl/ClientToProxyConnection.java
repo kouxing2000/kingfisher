@@ -656,7 +656,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         boolean shouldWarn = cause instanceof ClosedChannelException ||
                 cause.getMessage().contains("Connection reset by peer"); 
         if (shouldWarn) {
-            LOG.warn(message, cause);
+            LOG.debug(message, cause);
         } else {
             LOG.error(message, cause);
         }

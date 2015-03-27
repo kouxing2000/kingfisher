@@ -44,7 +44,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -356,7 +358,12 @@ public class StubhubHttpProxy {
 		HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withAllowLocalOnly(false);
 		
 		if (config.getProxyHost() != null) {
-			bootstrap.withAddress(InetSocketAddress.createUnresolved(config.getProxyHost(), config.getProxyPort()));
+			try {
+				bootstrap.withAddress(new InetSocketAddress(InetAddress.getByName(config.getProxyHost()), config.getProxyPort()));
+			} catch (UnknownHostException e) {
+				logger.error("failed to bind", e);
+				System.exit(-1);
+			}
 		} else {
 			bootstrap.withListenOnAllAddresses(true).withPort(config.getProxyPort());
 		}
@@ -617,7 +624,7 @@ public class StubhubHttpProxy {
 		final String url = request.headers().get(HttpHeaders.Names.HOST) + request.getUri();
 
 		if (logger.isInfoEnabled()) {
-			logger.info("forward request={} to real server" + url);
+			logger.info("forward request={} to real server", url);
 		}
 
 		// Configure the client.
