@@ -27,11 +27,10 @@ import org.slf4j.LoggerFactory;
 
 import com.stubhub.proxy.Constants;
 import com.stubhub.proxy.Context;
-import com.stubhub.proxy.URLResolver;
 
 public class LocalFileResolver implements URLResolver {
 
-	private static Logger logger = LoggerFactory.getLogger(LocalFileResolver.class);
+	//private static Logger logger = LoggerFactory.getLogger(LocalFileResolver.class);
 
 	private static Map<String, String> contentTypes = new HashMap<String, String>();
 

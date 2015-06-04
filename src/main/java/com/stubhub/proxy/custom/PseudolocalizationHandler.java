@@ -3,6 +3,7 @@ package com.stubhub.proxy.custom;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +21,7 @@ import com.stubhub.proxy.resolver.InternetFileResolver;
  * @author weili5
  * 
  */
-public class PseudolocalizationHandler extends InternetFileResolver {
+public class PseudolocalizationHandler extends InternetFileResolver implements CustomHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(PseudolocalizationHandler.class);
 
@@ -35,9 +36,27 @@ public class PseudolocalizationHandler extends InternetFileResolver {
 
 	// (\"[^\"]*?\s+?[^\"]+?\"|\"[A-Z][a-z]+?\")
 	// http://jex.im/regulex/#!embed=false&flags=&re=(%5C%22%5B%5E%5C%22%5D*%3F%5Cs%2B%3F%5B%5E%5C%22%5D%2B%3F%5C%22%7C%5C%22%5BA-Z%5D%5Ba-z%5D%2B%3F%5C%22)
-	private static final Pattern toBeTranslatedWord = Pattern
+	private Pattern toBeTranslatedWord = Pattern
 			.compile("(\\\"[^\\\"]*?\\s+?[^\\\"]+?\\\"|\\\"[A-Z][a-z]+?\\\")");
 
+	public PseudolocalizationHandler() {
+	}
+	
+	@Override
+	public void initial(Map<String, String> parameters) {
+		
+		logger.info("initial with parameter={}", parameters);
+		
+		String regex = parameters.get("targetTextPatternInRegx");
+		
+		if (regex != null) {
+			toBeTranslatedWord = Pattern.compile(regex);
+		} else {
+			logger.warn("using default pattern={}", toBeTranslatedWord);
+		}
+		
+	}
+	
 	@Override
 	public HttpResponse read(String url, Context context) throws Exception {
 		HttpResponse result = super.read(url, context);
