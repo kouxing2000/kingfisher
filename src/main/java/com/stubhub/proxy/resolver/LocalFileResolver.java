@@ -82,10 +82,20 @@ public class LocalFileResolver implements URLResolver {
 		}
 		
 		String contentType = null;
+
+		if (context.getRequest() != null) {
+			String accept = context.getRequest().headers().get("Accept");
+			if (!"*/*".equals(accept) && !accept.contains(",")) {
+				contentType = accept;
+			}
+		}
+
 		ByteBuf buffer = null;
 		if (byteArray != null) {
 			buffer = Unpooled.copiedBuffer(byteArray);
-			contentType = fetchContentType(url);
+			if (contentType == null) {
+				contentType = fetchContentType(url);
+			}
 		}
 		
 		DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,

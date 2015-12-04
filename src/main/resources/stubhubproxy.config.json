@@ -37,8 +37,10 @@
     },
     "mappings": {
         "http://cache*.stubhubstatic.com/resources/mojito/js/feature/bundle-ep-bp-seatmapPagi-*.*.0-SNAPSHOT.js" : "e:\\bundle.js",
+        "https://www.slcq001.com/shape/user/customers/v1/*/paymentInstrumentsV2*" : "e:\\payment.json",
         "http://www.${env}.com/<x>/<y>/event/<id>/" : "http://www.${env}.com/eventpage-seopoc/?event_id=<id>",
-        "http://www.${env}.com/<x>/performer/<id>/<p>" : "http://www.${env}.com/performer-seopoc/?performer_id=<id>"
+        "http://www.${env}.com/<x>/performer/<id>/<p>" : "http://www.${env}.com/performer-seopoc/?performer_id=<id>",
+        "http://www.slcq017.co.uk/shape/catalog/venues/v3/venueconfigurations?eventId=9650587" : "http://www.slcq017.co.uk/shape/catalog/venues/v3/venueconfigurations?eventId=9303031"
     },
     "handlers" : {
         "https://m.slcq001.com/shape/accountmanagement/*" : {
@@ -53,6 +55,15 @@
            "parameters": {
                "max" : 100,
                "timeToLiveSecond" : "60"
+            }
+        },
+        "http://de.slcq017.com*" : {
+            "className" : "com.stubhub.proxy.custom.ReplaceHandler",
+            "parameters": {
+                "www.slcq017.com" : "de.slcq017.com",
+                "SH.locale = 'en-us'" : "SH.locale = 'de-de'",
+                "SH.shlocale = 'en-us'" : "SH.shlocale = 'de-de'",
+                "SH.country = SH.shlocale.split('-')[1].toLowerCase();" : "SH.country = us;"
             }
         }
     },

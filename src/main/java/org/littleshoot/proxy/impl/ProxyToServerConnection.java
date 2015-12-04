@@ -346,6 +346,8 @@ public class ProxyToServerConnection extends ProxyConnection<HttpResponse> {
                     logLevel = LocationAwareLogger.DEBUG_INT;
                 } else if (causeMessage.contains("event executor terminated")) {
                     logLevel = LocationAwareLogger.DEBUG_INT;
+                } else if (causeMessage.contains("An existing connection was forcibly closed by the remote host")) {
+                    logLevel = LocationAwareLogger.DEBUG_INT;
                 }
             }
         }

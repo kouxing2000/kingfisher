@@ -1,6 +1,7 @@
 package com.stubhub.proxy;
 
 import io.netty.handler.codec.http.HttpRequest;
+import org.apache.http.HttpResponse;
 
 public class Context {
 	private HttpRequest request;
@@ -23,5 +24,18 @@ public class Context {
 	public Context setUsingHttps(boolean usingHttps) {
 		this.usingHttps = usingHttps;
 		return this;
+	}
+
+	/**
+	 * only for particular case
+	 */
+	private HttpResponse originResponse;
+
+	public HttpResponse getOriginResponse() {
+		return originResponse;
+	}
+
+	public void setOriginResponse(HttpResponse originResponse) {
+		this.originResponse = originResponse;
 	}
 }

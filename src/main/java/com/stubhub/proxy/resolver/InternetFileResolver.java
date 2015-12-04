@@ -65,6 +65,7 @@ public class InternetFileResolver implements URLResolver {
 		org.apache.http.HttpResponse response = null;
 		try {
 			response = httpclient.execute(httpget);
+			context.setOriginResponse(response);
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
 				InputStream instream = entity.getContent();

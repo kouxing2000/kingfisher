@@ -229,7 +229,7 @@ public class StubhubHttpProxy {
 			}
 		}
 
-		return null;
+  		return null;
 	}
 
 	private String fillVariable(String value, Map<String, String> variables) {
@@ -307,7 +307,7 @@ public class StubhubHttpProxy {
 				config = new Gson().fromJson(new InputStreamReader(resourceAsStream, Constants.utf8), Config.class);
 				resourceAsStream.close();
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("while read default config", e);
 				return;
 			}
 		}
@@ -612,7 +612,7 @@ public class StubhubHttpProxy {
 
 					@Override
 					public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-						cause.printStackTrace();
+						logger.info("[internal client] exceptionCaught:{}", cause, cause.getMessage());
 						ctx.close();
 					}
 				});
@@ -624,7 +624,7 @@ public class StubhubHttpProxy {
 		final String url = request.headers().get(HttpHeaders.Names.HOST) + request.getUri();
 
 		if (logger.isInfoEnabled()) {
-			logger.info("forward request={} to real server", url);
+			logger.info("[internal client] forward request={} to real server", url);
 		}
 
 		// Configure the client.
@@ -668,7 +668,7 @@ public class StubhubHttpProxy {
 			// channel.closeFuture().sync();
 
 		} catch (Exception e) {
-			logger.error("", e);
+			logger.info("[internal client] catchException ", e);
 		}
 	}
 
@@ -747,7 +747,7 @@ public class StubhubHttpProxy {
 
 			@Override
 			public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-				cause.printStackTrace();
+				logger.info("[internal https server] exceptionCaught:{} - {}", cause, cause.getMessage());
 				ctx.close();
 			}
 		};
