@@ -176,11 +176,11 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         }
     }
     
-    static class Stubhub{
+    static class Kingfisher{
     	
     }
     
-    private static Logger stubhubLogger = LoggerFactory.getLogger(Stubhub.class);
+    private static Logger kingfisherLogger = LoggerFactory.getLogger(Kingfisher.class);
     
     private static final Map<String, String> httpsHostPortMapping = new ConcurrentHashMap<String, String>();
     public static Map<String, String> getHttpsHostPortMapping() {
@@ -277,9 +277,9 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
 
             	httpRequest.headers().add(Constants.HEADER_FLAG_NO_PROXY, "TRUE");
             	
-            	stubhubLogger.debug("replace " + oriServerHostAndPort + " to " + serverHostAndPort);
+            	kingfisherLogger.debug("replace " + oriServerHostAndPort + " to " + serverHostAndPort);
             } else {
-            	stubhubLogger.debug("no replacement for {}", oriServerHostAndPort);
+            	kingfisherLogger.debug("no replacement for {}", oriServerHostAndPort);
             }
         } else if (currentServerConnection == null) {
             LOG.debug("Didn't find existing ProxyToServerConnection for: {}",

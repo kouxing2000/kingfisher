@@ -39,10 +39,10 @@
     <logger name="org.littleshoot.proxy">
         <level value="info"/>
     </logger>
-    <logger name="org.stubhub.proxy">
+    <logger name="com.kingfisher.proxy">
         <level value="debug"/>
     </logger>
-    <logger name="org.littleshoot.proxy.impl.ClientToProxyConnection.Stubhub">
+    <logger name="org.littleshoot.proxy.impl.ClientToProxyConnection.Kingfisher">
         <level value="debug"/>
     </logger>
     <root>
