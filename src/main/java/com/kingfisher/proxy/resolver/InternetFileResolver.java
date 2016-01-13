@@ -1,5 +1,6 @@
-package com.stubhub.proxy.resolver;
+package com.kingfisher.proxy.resolver;
 
+import com.kingfisher.proxy.util.HttpClientUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -8,10 +9,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +22,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.stubhub.proxy.Constants;
-import com.stubhub.proxy.Context;
-import com.stubhub.proxy.util.HttpClientUtils;
+import com.kingfisher.proxy.Context;
 
 public class InternetFileResolver implements URLResolver {
 

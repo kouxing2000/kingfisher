@@ -1,4 +1,4 @@
-package com.stubhub.proxy.config;
+package com.kingfisher.proxy.config;
 
 import java.util.ArrayList;
 import java.util.HashMap;

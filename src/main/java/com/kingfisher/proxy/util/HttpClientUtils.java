@@ -1,4 +1,4 @@
-package com.stubhub.proxy.util;
+package com.kingfisher.proxy.util;
 
 import java.io.IOException;
 import java.net.Socket;

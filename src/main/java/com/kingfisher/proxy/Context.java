@@ -1,4 +1,4 @@
-package com.stubhub.proxy;
+package com.kingfisher.proxy;
 
 import io.netty.handler.codec.http.HttpRequest;
 import org.apache.http.HttpResponse;

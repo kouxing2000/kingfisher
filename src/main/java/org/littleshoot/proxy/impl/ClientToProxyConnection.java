@@ -49,7 +49,7 @@ import org.littleshoot.proxy.SslEngineSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.stubhub.proxy.Constants;
+import com.kingfisher.proxy.Constants;
 
 /**
  * <p>

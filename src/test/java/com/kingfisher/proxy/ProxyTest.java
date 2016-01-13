@@ -1,4 +1,4 @@
-package com.stubhub.proxy;
+package com.kingfisher.proxy;
 
 import org.junit.Test;
 
@@ -6,7 +6,7 @@ public class ProxyTest {
 
 	@Test
 	public void testProxy() {
-		StubhubHttpProxy.main(null);
+		KingfisherHttpProxy.main(null);
 		
 		try {
 			Thread.sleep(100000);

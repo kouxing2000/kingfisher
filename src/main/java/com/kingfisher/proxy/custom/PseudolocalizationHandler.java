@@ -1,4 +1,4 @@
-package com.stubhub.proxy.custom;
+package com.kingfisher.proxy.custom;
 
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
@@ -7,12 +7,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.stubhub.proxy.Context;
-import com.stubhub.proxy.resolver.InternetFileResolver;
+import com.kingfisher.proxy.Context;
+import com.kingfisher.proxy.resolver.InternetFileResolver;
 
 /**
  * 

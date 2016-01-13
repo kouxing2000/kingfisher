@@ -1,7 +1,7 @@
-package com.stubhub.proxy.custom;
+package com.kingfisher.proxy.custom;
 
-import com.stubhub.proxy.Context;
-import com.stubhub.proxy.resolver.InternetFileResolver;
+import com.kingfisher.proxy.resolver.InternetFileResolver;
+import com.kingfisher.proxy.Context;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

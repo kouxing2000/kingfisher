@@ -1,10 +1,13 @@
-package com.stubhub.proxy;
+package com.kingfisher.proxy;
 
 import static io.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+
+import com.kingfisher.proxy.config.HandlerConfig;
+import com.kingfisher.proxy.resolver.URLResolver;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -79,30 +82,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.stubhub.proxy.config.Config;
-import com.stubhub.proxy.config.HandlerConfig;
-import com.stubhub.proxy.config.HttpResponseBuilder;
-import com.stubhub.proxy.config.ProxyConfig;
-import com.stubhub.proxy.custom.CustomHandler;
-import com.stubhub.proxy.resolver.InternetFileResolver;
-import com.stubhub.proxy.resolver.LocalFileResolver;
-import com.stubhub.proxy.resolver.URLResolver;
+import com.kingfisher.proxy.config.Config;
+import com.kingfisher.proxy.config.HttpResponseBuilder;
+import com.kingfisher.proxy.config.ProxyConfig;
+import com.kingfisher.proxy.custom.CustomHandler;
+import com.kingfisher.proxy.resolver.InternetFileResolver;
+import com.kingfisher.proxy.resolver.LocalFileResolver;
 
-public class StubhubHttpProxy {
+public class KingfisherHttpProxy {
 
 	private static final String HTTPS_SERVER_INTERNAL_HOST = "127.0.0.78";
 
 	private static final String NAMED_GROUP = "<\\w+?>";
 
-	private static final String DEFAULT_CONFIG_JSON = "stubhubproxy.config.json";
+	private static final String DEFAULT_CONFIG_JSON = "kingfisherproxy.config.json";
 
 	private static final int HTTPS_SERVER_INTERNAL_PORT = 18443;
 	private static final int HTTP_SERVER_INTERNAL_PORT = 18080;
 
 	private static final String PROXY_BY = "Proxy-By";
-	private static final String STUBHUB_PROXY = "Kingfish-Web-Debug-Proxy";
+	private static final String KINGFISH_WEB_DEBUG_PROXY = "Kingfish-Web-Debug-Proxy";
 
-	private static final Logger logger = LoggerFactory.getLogger(StubhubHttpProxy.class);
+	private static final Logger logger = LoggerFactory.getLogger(KingfisherHttpProxy.class);
 
 	private final SSLContext sslContext = SSLContextProvider.get();
 
@@ -223,7 +224,7 @@ public class StubhubHttpProxy {
 					httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
 				}
 
-				httpResponse.headers().set("Generate-By", STUBHUB_PROXY);
+				httpResponse.headers().set("Generate-By", KINGFISH_WEB_DEBUG_PROXY);
 
 				return httpResponse;
 			}
@@ -254,7 +255,7 @@ public class StubhubHttpProxy {
 	public static void main(String[] args) {
 
 		// read from arguments
-		final StubhubHttpProxy proxy = new StubhubHttpProxy();
+		final KingfisherHttpProxy proxy = new KingfisherHttpProxy();
 
 		Config config = null;
 
@@ -673,7 +674,7 @@ public class StubhubHttpProxy {
 	}
 
 	private void setProxyHeader(HttpResponse httpResponse) {
-		httpResponse.headers().set(PROXY_BY, STUBHUB_PROXY);
+		httpResponse.headers().set(PROXY_BY, KINGFISH_WEB_DEBUG_PROXY);
 	}
 
 	public void stop() {

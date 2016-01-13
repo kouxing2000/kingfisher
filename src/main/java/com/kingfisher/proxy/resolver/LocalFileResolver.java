@@ -1,4 +1,4 @@
-package com.stubhub.proxy.resolver;
+package com.kingfisher.proxy.resolver;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -8,25 +8,18 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.activation.MimetypesFileTypeMap;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.stubhub.proxy.Constants;
-import com.stubhub.proxy.Context;
+import com.kingfisher.proxy.Context;
 
 public class LocalFileResolver implements URLResolver {
 

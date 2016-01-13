@@ -1,4 +1,4 @@
-package com.stubhub.proxy;
+package com.kingfisher.proxy;
 
 import java.io.InputStream;
 import java.security.KeyStore;

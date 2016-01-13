@@ -1,5 +1,6 @@
-package com.stubhub.proxy.config;
+package com.kingfisher.proxy.config;
 
+import com.kingfisher.proxy.Constants;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.stubhub.proxy.Constants;
 
 public class HttpResponseBuilder {
 	

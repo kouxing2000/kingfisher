@@ -1,5 +1,8 @@
-package com.stubhub.proxy.custom.cacher;
+package com.kingfisher.proxy.custom.cacher;
 
+import com.kingfisher.proxy.Context;
+import com.kingfisher.proxy.custom.CustomHandler;
+import com.kingfisher.proxy.resolver.InternetFileResolver;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 
@@ -7,10 +10,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.stubhub.proxy.Context;
-import com.stubhub.proxy.custom.CustomHandler;
-import com.stubhub.proxy.resolver.InternetFileResolver;
 
 public abstract class Cacher implements CustomHandler {
 	

@@ -1,6 +1,6 @@
-package com.stubhub.proxy.resolver;
+package com.kingfisher.proxy.resolver;
 
-import com.stubhub.proxy.Context;
+import com.kingfisher.proxy.Context;
 
 import io.netty.handler.codec.http.HttpResponse;
 

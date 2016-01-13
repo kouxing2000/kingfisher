@@ -157,7 +157,7 @@
 				   </filters>
 					<archive>
 						<manifest>
-							<mainClass>com.stubhub.proxy.StubhubHttpProxy</mainClass>
+							<mainClass>com.kingfisher.proxy.KingfisherHttpProxy</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>

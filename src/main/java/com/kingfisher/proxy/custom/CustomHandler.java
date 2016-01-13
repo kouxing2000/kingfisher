@@ -1,8 +1,8 @@
-package com.stubhub.proxy.custom;
+package com.kingfisher.proxy.custom;
 
 import java.util.Map;
 
-import com.stubhub.proxy.resolver.URLResolver;
+import com.kingfisher.proxy.resolver.URLResolver;
 
 public interface CustomHandler extends URLResolver {
 	
