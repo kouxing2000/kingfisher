@@ -41,7 +41,7 @@ The tool will be able to start from command line and read a configuration file i
 
   1. `make build` or `mvn compile assembly:single`
   2. Change the `config.json` at root dir per your case. (read config.json for details)
-  3. `make start` or `java -jar target/kingfisher-1.0.0-SNAPSHOT-jar-with-dependencies.jar config.json`
+  3. `make start` or `java -jar target/proxy-1.0.0-SNAPSHOT-jar-with-dependencies.jar config.json`
 
 
 *NOTE*: read the `Makefile` for details if those two does not work well. ;)
