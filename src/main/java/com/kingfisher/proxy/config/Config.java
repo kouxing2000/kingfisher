@@ -94,18 +94,10 @@ public class Config {
 		c.variables.put("branchRoot", "c:/dev/depot/main");
 		c.variables.put("protocol", "https");
 
-		c.mappings
-				.put("${protocol}://*.stubhubstatic.com/resources/mojito/js/feature/bundle-event-blueprint-seatmaps-*.js",
-						"${branchRoot}/reorganized_code/resourceswebapp/src/main/webapp/resources/mojito/js/feature/seatmap.js");
-		c.mappings
-				.put("${protocol}://*.stubhubstatic.com/resources/mojito/js/feature/bundle-event-blueprint-seatmaps2-*.js",
-						"${branchRoot}/reorganized_code/resourceswebapp/src/main/webapp/resources/mojito/js/feature/seatmap2.js");
-
 		ProxyConfig proxy = new ProxyConfig();
 		proxy.setHost("slc-entbc-001");
 		proxy.setPort(80);
-		proxy.getBypassHosts().add("*srwd*");
-		proxy.getBypassHosts().add("*stubhub*");
+		proxy.getBypassHosts().add("*slcq*");
 		c.chainedProxies.add(proxy);
 		System.out.println(new Gson().toJson(c));
 	}
