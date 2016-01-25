@@ -4,75 +4,32 @@
     "variables": {
         "protocol": "https",
         "branchRoot": "c:/dev/depot/main",
-        "env": "slcq001",
+        "env": "slce002",
         "domain" : "www.${env}.com"
     },
     "answers" : {
-        "https://m.${env}.com/shape/accountmanagement/orders/v1/buyer/*" :
-        {
-	        "version":"1.1",
-	        "statusCode":404,
-	        "delayMS": 200,
-	        "headers":{
-	        	"Keep-Alive":"timeout=5, max=100",
-	        	"Connection":"Keep-Alive",
-	        	"activityID":"activityID1"
-	        	},
-	        "body":"<html>ERROR</html>"
-        },
-        "https://m.${env}.com/shape/accountmanagement/listings/v1/seller/*" :
-        {
-	        "version":"1.1",
-	        "statusCode":404,
-	        "delayMS": 200,
-	        "headers":{
-	        	"Keep-Alive":"timeout=5, max=100",
-	        	"Connection":"Keep-Alive",
-	        	"activityID":"activityID1"
-	        	},
-	        "body":"<html>ERROR</html>"
-        }
+
     },
     "mappings": {
-        "https://www.${env}.com/shape/user/customers/v1/*/paymentInstrumentsV2*" : "e:\\payment.json",
-        "http://www.${env}.com/<x>/<y>/event/<id>/" : "http://www.${env}.com/eventpage-seopoc/?event_id=<id>",
-        "http://www.${env}.com/<x>/performer/<id>/<p>" : "http://www.${env}.com/performer-seopoc/?performer_id=<id>",
-        "http://www.${env}.co.uk/shape/catalog/venues/v3/venueconfigurations?eventId=9650587" : "http://www.${env}.co.uk/shape/catalog/venues/v3/venueconfigurations?eventId=9303031"
+
     },
     "handlers" : {
-        "https://m.${env}.com/shape/accountmanagement/*" : {
-           "className" : "com.kingfisher.proxy.custom.PseudolocalizationHandler",
-           "parameters": {
-                /* regex for gson value */
-		        "targetTextPatternInRegx": "(\\\"[^\\\"]*?\\s+?[^\\\"]+?\\\"|\\\"[A-Z][a-z]+?\\\")"
-		    }
-        },
-        "http://${env}mci001.${env}.com:8080/solr/*" : {
-           "className" : "com.kingfisher.proxy.custom.cacher.MemoryCacher",
-           "parameters": {
-               "max" : 100,
-               "timeToLiveSecond" : "60"
-            }
-        },
-        "http://de.${env}.com*" : {
+        "https://sell.slce002.co.uk/sfr*" : {
             "className" : "com.kingfisher.proxy.custom.ReplaceHandler",
             "parameters": {
-                "www.slcq017.com" : "de.slcq017.com",
-                "SH.locale = 'en-us'" : "SH.locale = 'de-de'",
-                "SH.shlocale = 'en-us'" : "SH.shlocale = 'de-de'",
-                "SH.country = SH.shlocale.split('-')[1].toLowerCase();" : "SH.country = us;"
+                " var defaultLocale = 'en-gb'" : " var defaultLocale = 'de-de'"
             }
         },
-        "https://www.${env}.co.uk/buy/review*" : {
+        "https://sell.slce002.com/sfr*" : {
             "className" : "com.kingfisher.proxy.custom.ReplaceHandler",
             "parameters": {
-                "'gs.features.2.buy.disableMarketingOptIn','featureValue':'TRUE'": "'gs.features.2.buy.disableMarketingOptIn','featureValue':'FALSE'"
+                " var defaultLocale = 'en-us'" : " var defaultLocale = 'de-de'"
             }
         },
-        "http://www.${env}.co.uk/event/*" : {
+        "https://sell.slce002.de/sfr*" : {
             "className" : "com.kingfisher.proxy.custom.ReplaceHandler",
             "parameters": {
-                "'gs.features.2.ablapp.SellerEligibilityEnabled','featureValue':'FALSE'": "'gs.features.2.common.pdoLayout','featureValue':'GB'"
+                " var defaultLocale = 'de-de'" : " var defaultLocale = 'en-gb'"
             }
         }
     },
