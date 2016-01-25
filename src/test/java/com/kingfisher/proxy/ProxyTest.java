@@ -6,7 +6,7 @@ public class ProxyTest {
 
 	@Test
 	public void testProxy() {
-		KingfisherHttpProxy.main(null);
+		ProxyStarter.main(null);
 		
 		try {
 			Thread.sleep(100000);

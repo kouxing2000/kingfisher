@@ -157,7 +157,7 @@
 				   </filters>
 					<archive>
 						<manifest>
-							<mainClass>com.kingfisher.proxy.KingfisherHttpProxy</mainClass>
+							<mainClass>com.kingfisher.proxy.ProxyStarter</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
