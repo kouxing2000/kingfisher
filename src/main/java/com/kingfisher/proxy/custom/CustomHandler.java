@@ -6,6 +6,6 @@ import com.kingfisher.proxy.resolver.URLResolver;
 
 public interface CustomHandler extends URLResolver {
 	
-	public void initial(Map<String, String> parameters);
+	void initial(Map<String, String> parameters);
 
 }

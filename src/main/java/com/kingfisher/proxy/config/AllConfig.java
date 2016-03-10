@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 
-public class Config {
+public class AllConfig {
 
 	private int proxyPort;
 
@@ -20,8 +20,10 @@ public class Config {
 	private List<ProxyConfig> chainedProxies;
 
 	private String proxyHost;
+
+	private List<Rule> rules;
 	
-	public Config() {
+	public AllConfig() {
 		proxyHost = null;
 		proxyPort = 8081;
 		variables = new HashMap<String, String>();
@@ -84,10 +86,18 @@ public class Config {
 	public void setHandlers(Map<String, HandlerConfig> handlers) {
 		this.handlers = handlers;
 	}
-	
+
+	public List<Rule> getRules() {
+		return rules;
+	}
+
+	public void setRules(List<Rule> rules) {
+		this.rules = rules;
+	}
+
 	public static void main(String[] args) {
         
-		Config c = new Config();
+		AllConfig c = new AllConfig();
 		c.proxyPort = 8081;
 
 		c.variables.put("env", "srwd93");

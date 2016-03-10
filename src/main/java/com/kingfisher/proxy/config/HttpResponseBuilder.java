@@ -23,18 +23,8 @@ public class HttpResponseBuilder {
 	private String version;
 	private int statusCode;
 	private Map<String, String> headers;
-	
-	private long delayMS;
 
 	private String body;
-	
-	public long getDelayMS() {
-		return delayMS;
-	}
-
-	public void setDelayMS(long delayMS) {
-		this.delayMS = delayMS;
-	}
 
 	public String getVersion() {
 		return version;
@@ -93,16 +83,6 @@ public class HttpResponseBuilder {
 				responseHeaders.add(header.getKey(), header.getValue());
 			}
 		}
-		
-		if (delayMS > 0) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("delayMS:{}", delayMS);
-			}
-			try {
-				Thread.sleep(delayMS);
-			} catch (InterruptedException e) {
-			}
-		}
 
 		return defaultFullHttpResponse;
 	}
@@ -110,7 +90,7 @@ public class HttpResponseBuilder {
 	@Override
 	public String toString() {
 		return "HttpResponseBuilder [version=" + version + ", statusCode=" + statusCode + ", headers=" + headers
-				+ ", delayMS=" + delayMS + ", body=" + body + "]";
+				 + ", body=" + body + "]";
 	}
 
 	public static void main(String[] args) {

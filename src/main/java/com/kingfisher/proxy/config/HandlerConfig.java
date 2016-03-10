@@ -26,4 +26,12 @@ public class HandlerConfig {
 		this.parameters = parameters;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuffer sb = new StringBuffer("HandlerConfig{");
+		sb.append("className='").append(className).append('\'');
+		sb.append(", parameters=").append(parameters);
+		sb.append('}');
+		return sb.toString();
+	}
 }

@@ -42,9 +42,6 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -55,16 +52,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
@@ -81,8 +74,7 @@ import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.kingfisher.proxy.config.Config;
+import com.kingfisher.proxy.config.AllConfig;
 import com.kingfisher.proxy.config.HttpResponseBuilder;
 import com.kingfisher.proxy.config.ProxyConfig;
 import com.kingfisher.proxy.custom.CustomHandler;
@@ -240,7 +232,7 @@ public class KingfisherHttpProxy {
 		return value;
 	}
 
-	Config config = null;
+	AllConfig config = null;
 
 	final Map<Pattern, Object> urlMappings = new LinkedHashMap<Pattern, Object>();
 
@@ -249,7 +241,7 @@ public class KingfisherHttpProxy {
 
 	private HttpProxyServer proxyServer;
 
-	public void startProxy(Config configIn) {
+	public void startProxy(AllConfig configIn) {
 
 		loadConfig(configIn);
 
@@ -333,7 +325,7 @@ public class KingfisherHttpProxy {
 
 	Pattern namedGroupPattern = Pattern.compile(NAMED_GROUP);
 
-	public void loadConfig(Config configIn) {
+	public void loadConfig(AllConfig configIn) {
 		this.config = configIn;
 
 		if (config.getVariables() != null) {
