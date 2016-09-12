@@ -6,7 +6,6 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-import com.kingfisher.proxy.config.HandlerConfig;
 import com.kingfisher.proxy.resolver.URLResolver;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

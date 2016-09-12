@@ -13,21 +13,16 @@ public class AllConfig {
 
 	private Map<String, String> variables;
 
-	private Map<String, String> mappings;
-	private Map<String, HttpResponseBuilder> answers;
-	private Map<String, HandlerConfig> handlers;
-
 	private List<ProxyConfig> chainedProxies;
 
 	private String proxyHost;
 
-	private List<Rule> rules;
+	private List<RuleConfig> ruleConfigs;
 	
 	public AllConfig() {
 		proxyHost = null;
 		proxyPort = 8081;
 		variables = new HashMap<String, String>();
-		mappings = new HashMap<String, String>();
 		chainedProxies = new ArrayList<ProxyConfig>();
 	}
 
@@ -55,14 +50,6 @@ public class AllConfig {
 		this.variables = variables;
 	}
 
-	public Map<String, String> getMappings() {
-		return mappings;
-	}
-
-	public void setMappings(Map<String, String> mappings) {
-		this.mappings = mappings;
-	}
-
 	public List<ProxyConfig> getChainedProxies() {
 		return chainedProxies;
 	}
@@ -71,28 +58,12 @@ public class AllConfig {
 		this.chainedProxies = chainedProxies;
 	}
 
-	public Map<String, HttpResponseBuilder> getAnswers() {
-		return answers;
+	public List<RuleConfig> getRuleConfigs() {
+		return ruleConfigs;
 	}
 
-	public void setAnswers(Map<String, HttpResponseBuilder> answers) {
-		this.answers = answers;
-	}
-
-	public Map<String, HandlerConfig> getHandlers() {
-		return handlers;
-	}
-
-	public void setHandlers(Map<String, HandlerConfig> handlers) {
-		this.handlers = handlers;
-	}
-
-	public List<Rule> getRules() {
-		return rules;
-	}
-
-	public void setRules(List<Rule> rules) {
-		this.rules = rules;
+	public void setRuleConfigs(List<RuleConfig> ruleConfigs) {
+		this.ruleConfigs = ruleConfigs;
 	}
 
 	public static void main(String[] args) {

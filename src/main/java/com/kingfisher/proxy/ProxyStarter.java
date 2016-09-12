@@ -113,7 +113,7 @@ public class ProxyStarter {
                 InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(DEFAULT_CONFIG_JSON);
                 config = gson.fromJson(new InputStreamReader(resourceAsStream, Constants.utf8), AllConfig.class);
 
-                logger.info("rules:{}", config.getRules());
+                logger.info("rules:{}", config.getRuleConfigs());
 
                 resourceAsStream.close();
             } catch (Exception e) {

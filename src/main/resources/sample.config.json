@@ -10,13 +10,13 @@
   "rules": [
     {
       "disabled": false,
-      "when" : {
+      "when": {
         "url": "https://m.${env}.com/shape/accountmanagement/orders/v1/buyer/*",
-        "header.acceptLanguage" : "en-de"
+        "header.acceptLanguage": "en-de"
       },
       "then": [
         {
-          "delay" : 200
+          "delay": 200
         },
         {
           "answer": {
@@ -33,63 +33,52 @@
       ]
     },
     {
-      "url": "https://www.${env}.com/shape/user/customers/v1/*/paymentInstrumentsV2*",
       "disabled": false,
-      "filters": [
+      "when": {
+        "url": "https://www.${env}.com/shape/user/customers/v1/*/paymentInstrumentsV2*"
+      },
+      "then": [
         {
-          "type": "mapping",
-          "config": {
-            "to": "e:\\payment.json"
+          "mapping": "e:\\payment.json"
+        }
+      ]
+    },
+    {
+      "disabled": false,
+      "when": {
+        "url": "https://m.${env}.com/shape/accountmanagement/*"
+      },
+      "then": [
+        {
+          "com.kingfisher.proxy.custom.PseudolocalizationHandler": {
+            "targetTextPatternInRegx": "(\\\"[^\\\"]*?\\s+?[^\\\"]+?\\\"|\\\"[A-Z][a-z]+?\\\")"
           }
         }
       ]
     },
     {
-      "url": "https://m.${env}.com/shape/accountmanagement/*",
-      "regexUrl": "",
       "disabled": false,
-      "filters": [
+      "when": {
+        "url": "http://www.${env}.co.uk/event/*"
+      },
+      "then": [
         {
-          "type": "handler",
-          "config": {
-            "className": "com.kingfisher.proxy.custom.PseudolocalizationHandler",
-            "parameters": {
-              /* regex for gson value */
-              "targetTextPatternInRegx": "(\\\"[^\\\"]*?\\s+?[^\\\"]+?\\\"|\\\"[A-Z][a-z]+?\\\")"
-            }
+          "com.kingfisher.proxy.custom.ReplaceHandler": {
+            "'gs.features.2.ablapp.SellerEligibilityEnabled','featureValue':'FALSE'": "'gs.features.2.common.pdoLayout','featureValue':'GB'"
           }
         }
       ]
     },
     {
-      "url": "http://www.${env}.co.uk/event/*",
-      "regexUrl": "",
       "disabled": false,
-      "filters": [
+      "when": {
+        "url": "http://${env}mci001.${env}.com:8080/solr/*"
+      },
+      "then": [
         {
-          "type": "handler",
-          "config": {
-            "className": "com.kingfisher.proxy.custom.ReplaceHandler",
-            "parameters": {
-              "'gs.features.2.ablapp.SellerEligibilityEnabled','featureValue':'FALSE'": "'gs.features.2.common.pdoLayout','featureValue':'GB'"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "url": "http://${env}mci001.${env}.com:8080/solr/*",
-      "regexUrl": "",
-      "disabled": false,
-      "filters": [
-        {
-          "type": "handler",
-          "config": {
-            "className": "com.kingfisher.proxy.custom.cacher.MemoryCacher",
-            "parameters": {
-              "max": 100,
-              "timeToLiveSecond": "60"
-            }
+          "com.kingfisher.proxy.custom.cacher.MemoryCacher": {
+            "max": 100,
+            "timeToLiveSecond": "60"
           }
         }
       ]
