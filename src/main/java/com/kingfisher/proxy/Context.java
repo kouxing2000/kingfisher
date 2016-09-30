@@ -26,9 +26,7 @@ public class Context {
 		return this;
 	}
 
-	/**
-	 * only for particular case
-	 */
+	//TODO replace it with netty's HttpResponse and remove origin in name
 	private HttpResponse originResponse;
 
 	public HttpResponse getOriginResponse() {

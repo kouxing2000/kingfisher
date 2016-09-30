@@ -5,6 +5,8 @@ package com.kingfisher.proxy;
  */
 public interface Rule {
 
+    boolean meet(Context context);
+
     void process(Context context);
 
 }

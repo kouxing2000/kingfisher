@@ -3,23 +3,10 @@ package com.kingfisher.proxy.config;
 
 public class RuleConfig {
 
-    private String url;
     private boolean disabled;
 
-    public String getUrl() {
-        return url;
-    }
+    private String when;
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
+    private String then;
 
-
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
-    }
 }
