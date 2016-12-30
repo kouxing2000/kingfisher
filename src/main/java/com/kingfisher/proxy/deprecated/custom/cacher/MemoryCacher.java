@@ -1,4 +1,4 @@
-package com.kingfisher.proxy.custom.cacher;
+package com.kingfisher.proxy.deprecated.custom.cacher;
 
 import io.netty.handler.codec.http.HttpResponse;
 

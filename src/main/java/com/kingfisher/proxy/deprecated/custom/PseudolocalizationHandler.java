@@ -1,4 +1,4 @@
-package com.kingfisher.proxy.custom;
+package com.kingfisher.proxy.deprecated.custom;
 
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;

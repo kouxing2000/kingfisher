@@ -11,8 +11,7 @@
     {
       "disabled": false,
       "when": {
-        "url": "https://m.${env}.com/orders/v1/buyer/*",
-        "header.acceptLanguage": "en-de"
+        "url": "https://m.${env}.com/orders/v1/buyer/*"
       },
       "then": [
         {

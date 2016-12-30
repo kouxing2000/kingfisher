@@ -1,4 +1,4 @@
-package com.kingfisher.proxy.custom;
+package com.kingfisher.proxy.deprecated.custom;
 
 import java.util.Map;
 

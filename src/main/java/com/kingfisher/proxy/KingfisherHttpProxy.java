@@ -6,7 +6,10 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-import com.kingfisher.proxy.resolver.URLResolver;
+import com.kingfisher.proxy.config.RuleConfig;
+import com.kingfisher.proxy.intf.HttpRequestHandler;
+import com.kingfisher.proxy.resolver.Delegator;
+import com.kingfisher.proxy.util.HttpResponseBuilder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -56,6 +59,9 @@ import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.script.Bindings;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ChainedProxy;
@@ -74,18 +80,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kingfisher.proxy.config.AllConfig;
-import com.kingfisher.proxy.config.HttpResponseBuilder;
 import com.kingfisher.proxy.config.ProxyConfig;
-import com.kingfisher.proxy.custom.CustomHandler;
-import com.kingfisher.proxy.resolver.InternetFileResolver;
-import com.kingfisher.proxy.resolver.LocalFileResolver;
 
 public class KingfisherHttpProxy {
 
-	private static final String HTTPS_SERVER_INTERNAL_HOST = "127.0.0.78";
+	private static final String HTTPS_SERVER_INTERNAL_HOST = "127.0.0.1";
 
-	private static final String NAMED_GROUP = "<\\w+?>";
-
+	private static final String NAMED_GROUP = "%\\w+?%";
 
 	private static final int HTTPS_SERVER_INTERNAL_PORT = 18443;
 	private static final int HTTP_SERVER_INTERNAL_PORT = 18080;
@@ -100,8 +101,12 @@ public class KingfisherHttpProxy {
 	// new SelfSignedSslEngineSource(
 	// "littleproxy_keystore.jks").getSslContext();
 
-	private final URLResolver localResolver = new LocalFileResolver();
-	private final URLResolver internetResolver = new InternetFileResolver();
+	private final ThreadLocal<Delegator> delegatorLocal = new ThreadLocal<Delegator>(){
+        @Override
+        protected Delegator initialValue() {
+            return new Delegator();
+        }
+    };
 
 	/**
 	 * 
@@ -123,13 +128,13 @@ public class KingfisherHttpProxy {
 			urlWithoutHttpPrefix = httpRequest.headers().get(HttpHeaders.Names.HOST) + urlWithoutHttpPrefix;
 		}
 
-		for (Map.Entry<Pattern, Object> e : urlMappings.entrySet()) {
+		for (Map.Entry<Pattern, HttpRequestHandler> e : urlMappings.entrySet()) {
 			Pattern pattern = e.getKey();
 			Matcher matcher = pattern.matcher(urlWithoutHttpPrefix);
 
 			if (matcher.matches()) {
 
-				HttpResponse httpResponse = null;
+				HttpResponse httpResponse;
 
 				try {
 
@@ -137,7 +142,29 @@ public class KingfisherHttpProxy {
 						logger.info("handle by proxy =>" + urlWithoutHttpPrefix);
 					}
 
-					Object value = e.getValue();
+                    // handle all named group
+                    if (urlMappingNamedGroupMappings.containsKey(pattern)) {
+                        Map<String, Integer> namedGroupMapping = urlMappingNamedGroupMappings.get(pattern);
+                        for (Map.Entry<String, Integer> me : namedGroupMapping.entrySet()) {
+                            String groupValue = matcher.group(me.getValue());
+                            String key = me.getKey();
+                            key = key.substring(1, key.length() - 1);
+                            context.getVariables().put(key, groupValue);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("replace named group from {} to {}", me.getKey(), groupValue);
+                            }
+                        }
+                    }
+
+					HttpRequestHandler handler = e.getValue();
+
+					httpResponse = handler.handle(context);
+
+                    if (logger.isInfoEnabled()) {
+                        logger.info("httpResponse={}", httpResponse);
+                    }
+
+					/*
 
 					if (value instanceof HttpResponseBuilder) {
 						httpResponse = ((HttpResponseBuilder) value).build();
@@ -175,21 +202,26 @@ public class KingfisherHttpProxy {
 						logger.error("Internal error, not support {}", value);
 					}
 
-				} catch (Exception exp) {
+					*/
 
-					String inCaseFailed = "Failed to handle!!! debug info:\n";
+				} catch (Throwable exp) {
 
-					inCaseFailed += "match by pattern:[" + pattern + "]\n";
-					inCaseFailed += " map to:[" + e.getValue() + "]\n";
-					inCaseFailed += "httpRequest:[" + httpRequest + "]\n";
-					inCaseFailed += "\n";
+                    logger.error("", exp);
+
+					StringBuilder inCaseFailed = new StringBuilder();
+                    inCaseFailed.append("Failed to handle!!! debug info:<br/>");
+
+                    inCaseFailed.append("match by pattern:[" + pattern + "]<br/>");
+                    inCaseFailed.append(" -- map to:[" + e.getValue() + "]<br/>");
+                    inCaseFailed.append("httpRequest:[" + httpRequest + "]<br/>");
+                    inCaseFailed.append("<br/>");
 
 					ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 					PrintStream ps = new PrintStream(byteArrayOutputStream);
 					exp.printStackTrace(ps);
 					ps.flush();
 					try {
-						inCaseFailed += byteArrayOutputStream.toString("UTF-8");
+                        inCaseFailed.append(byteArrayOutputStream.toString("UTF-8"));
 						ps.close();
 					} catch (UnsupportedEncodingException uex) {
 					}
@@ -203,7 +235,7 @@ public class KingfisherHttpProxy {
 					HttpHeaders.setContentLength(httpResponse, buffer.readableBytes());
 				}
 
-				String contentType = httpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE);
+				String contentType;
 
 				if ("XMLHttpRequest".equals(httpRequest.headers().get("X-Requested-With"))) {
 					contentType = "application/json;charset=UTF-8";
@@ -225,6 +257,9 @@ public class KingfisherHttpProxy {
 
 	private String fillVariable(String value, Map<String, String> variables) {
 		// TODO using pattern to replace
+        if (variables == null) {
+            return value;
+        }
 		for (Map.Entry<String, String> e : variables.entrySet()) {
 			value = value.replace("${" + e.getKey() + "}", e.getValue());
 		}
@@ -233,7 +268,7 @@ public class KingfisherHttpProxy {
 
 	AllConfig config = null;
 
-	final Map<Pattern, Object> urlMappings = new LinkedHashMap<Pattern, Object>();
+	final Map<Pattern, HttpRequestHandler> urlMappings = new LinkedHashMap<Pattern, HttpRequestHandler>();
 
 	// <Pattern, <group_name, group_id>>
 	final Map<Pattern, Map<String, Integer>> urlMappingNamedGroupMappings = new HashMap<Pattern, Map<String, Integer>>();
@@ -293,7 +328,7 @@ public class KingfisherHttpProxy {
 		
 		bootstrap.withFiltersSource(filtersSource);
 
-		if (!config.getChainedProxies().isEmpty()) {
+		if (config.getChainedProxies() != null && !config.getChainedProxies().isEmpty()) {
 			bootstrap.withChainProxyManager(new ChainedProxyManager() {
 				@Override
 				public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
@@ -352,6 +387,42 @@ public class KingfisherHttpProxy {
 		urlMappingNamedGroupMappings.clear();
 		ClientToProxyConnection.clearHttpsHostPortMapping();
 
+		for (RuleConfig ruleConfig : config.getRuleConfigs()) {
+
+            if (ruleConfig.isDisabled()) {
+                continue;
+            }
+
+            ruleConfig.setScript(fillVariable(ruleConfig.getScript(), config.getVariables()));
+
+			com.kingfisher.proxy.intf.HttpRequestHandler handler = createHandler(ruleConfig);
+
+			String sourceURL = addSourceUrls(ruleConfig.getUrl());
+
+            String patternString = ProxyUtils.wildcardToRegex(sourceURL);
+            Map<String, Integer> variables = null;
+            Matcher matcher = namedGroupPattern.matcher(patternString);
+            int groupId = 1;
+            while (matcher.find()) {
+                if (variables == null) {
+                    variables = new HashMap<String, Integer>();
+                }
+                String group = matcher.group();
+                variables.put(group, groupId++);
+            }
+            patternString = patternString.replaceAll(NAMED_GROUP, "(.*?)");
+            Pattern pattern = Pattern.compile(patternString);
+
+			urlMappings.put(pattern, handler);
+
+            if (variables != null) {
+                urlMappingNamedGroupMappings.put(pattern, variables);
+            }
+
+        }
+
+		/*
+
 		if (config.getAnswers() != null) {
 			for (Map.Entry<String, HttpResponseBuilder> e : config.getAnswers().entrySet()) {
 				String sourceURL = addSourceUrls(e.getKey());
@@ -400,9 +471,11 @@ public class KingfisherHttpProxy {
 			}
 		}
 
+		*/
+
 		logger.info("urlMappings, num:{}", urlMappings.size());
 
-		for (Map.Entry<Pattern, Object> urlMapping : urlMappings.entrySet()) {
+		for (Map.Entry<Pattern, HttpRequestHandler> urlMapping : urlMappings.entrySet()) {
 			logger.info("mapping [{}] to [{}]", urlMapping.getKey(), urlMapping.getValue());
 			if (urlMappingNamedGroupMappings.containsKey(urlMapping.getKey())) {
 				logger.info(" with named group mappings {}", urlMappingNamedGroupMappings.get(urlMapping.getKey()));
@@ -410,6 +483,11 @@ public class KingfisherHttpProxy {
 		}
 
 		logger.info("Intercept HttpsHostPort : {}", ClientToProxyConnection.getHttpsHostPortMapping().keySet());
+	}
+
+	private HttpRequestHandler createHandler(final RuleConfig ruleConfig) {
+
+        return new MyHttpRequestHandler(ruleConfig);
 	}
 
 	private String addSourceUrls(String sourceUrl) {
@@ -460,11 +538,13 @@ public class KingfisherHttpProxy {
 						}
 					});
 
+            logger.info("try to bind internal https port, {}:{}", HTTPS_SERVER_INTERNAL_HOST, HTTPS_SERVER_INTERNAL_PORT);
 			internalHttpsBindChannel = internalHttpsServerBootstrap
 					.bind(HTTPS_SERVER_INTERNAL_HOST, HTTPS_SERVER_INTERNAL_PORT).sync().channel();
+            logger.info("bind success!");
 
 		} catch (Exception e) {
-			logger.error("", e);
+			logger.error("startHttpsInternalServer", new RuntimeException(e));
 		}
 	}
 
@@ -698,4 +778,47 @@ public class KingfisherHttpProxy {
 				+ title + (request != null ? (" <" + request.headers().get(HttpHeaders.Names.HOST) + request
 						.getUri() + ">") : "") + "\n>>>>>>>>>>>>>\n" + msg + "\n<<<<<<<<<<<<<<<\n");
 	}
+
+    private class MyHttpRequestHandler implements HttpRequestHandler {
+
+        private final RuleConfig ruleConfig;
+
+        public MyHttpRequestHandler(RuleConfig ruleConfig) {
+            this.ruleConfig = ruleConfig;
+        }
+
+        @Override
+        public String toString() {
+            return "MyHttpRequestHandler{" +
+                    "ruleConfig=" + ruleConfig +
+                    '}';
+        }
+
+        @Override
+        public HttpResponse handle(Context context) {
+            try {
+                final ScriptEngineManager factory = new ScriptEngineManager();
+                final ScriptEngine engine = factory.getEngineByName("Nashorn");
+
+                final Bindings bindings = engine.createBindings();
+
+                bindings.put("context", context);
+                Delegator delegator = delegatorLocal.get();
+                delegator.setContext(context);
+                bindings.put("delegator", delegator);
+                bindings.put("responseBuilder", new HttpResponseBuilder());
+
+                for (Map.Entry<String, String> e : context.getVariables().entrySet()) {
+                    bindings.put(e.getKey(), e.getValue());
+                }
+
+                //TODO add cache binding
+
+                return (HttpResponse) engine.eval(ruleConfig.getScript(), bindings);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+    }
 }

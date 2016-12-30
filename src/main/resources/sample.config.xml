@@ -1,0 +1,93 @@
+<com.kingfisher.proxy.config.AllConfig>
+    <!-- optional
+    <proxyHost>127.0.0.1</proxyHost>
+    -->
+    <proxyPort>8081</proxyPort>
+
+    <!-- optional -->
+    <variables>
+        <entry>
+            <string>env</string>
+            <string>test001</string>
+        </entry>
+        <entry>
+            <string>variable</string>
+            <string>https</string>
+        </entry>
+    </variables>
+
+
+    <ruleConfigs>
+        <com.kingfisher.proxy.config.RuleConfig>
+            <url>http://${env}.com/1/</url>
+            <script><![CDATA[
+            var imports = new JavaImporter(java.lang, java.util);
+            with (imports) {
+                //Thread.sleep(1000);
+                responseBuilder
+                .status(200)
+                .body("<html> " + new Date() + "<br>" + System.getProperties() + "</html>")
+                .header("Connection", "Keep-Alive")
+                .header("Keep-Alive", "timeout=5, max=100")
+                .build();
+            }
+            ]]></script>
+        </com.kingfisher.proxy.config.RuleConfig>
+        <com.kingfisher.proxy.config.RuleConfig>
+            <url>http://${env}.com/2/</url>
+            <script><![CDATA[
+
+                delegator.read("https://www.rfc-editor.org/in-notes/rfc-index.txt");
+
+            ]]></script>
+        </com.kingfisher.proxy.config.RuleConfig>
+        <com.kingfisher.proxy.config.RuleConfig>
+            <url>https://${env}.com/3/</url>
+            <script><![CDATA[
+
+                delegator.read("./src/main/resources/sample.config.xml");
+
+            ]]></script>
+        </com.kingfisher.proxy.config.RuleConfig>
+        <com.kingfisher.proxy.config.RuleConfig>
+            <url>https://${env}.com/q/%keyword%/</url>
+            <script><![CDATA[
+
+                print(keyword);
+                delegator.read("https://www.stubhub.com/find/s/?q=" + keyword);
+
+            ]]></script>
+        </com.kingfisher.proxy.config.RuleConfig>
+
+        <!-- replace string from body -->
+        <com.kingfisher.proxy.config.RuleConfig>
+            <disabled>false</disabled>
+            <url>http://winterbe.com/posts/2014/04/05/java8-nashorn-tutorial/</url>
+            <script><![CDATA[
+
+                responseBuilder.from(delegator.read(context.request.uri));
+
+                //NOTE: using replace() will only replaceFirst, the function in javascript, not in java
+                responseBuilder.body = responseBuilder.body.replaceAll("Java", "*******");
+
+                //print(responseBuilder.body);
+                responseBuilder.build();
+
+            ]]></script>
+        </com.kingfisher.proxy.config.RuleConfig>
+
+    </ruleConfigs>
+
+    <!--
+     <chainedProxies>
+        <com.kingfisher.proxy.config.ProxyConfig>
+            <host>slc-entbc-001</host>
+            <port>80</port>
+            <disabled>true</disabled>
+            <bypassHosts>
+                <string>*slcq*</string>
+            </bypassHosts>
+        </com.kingfisher.proxy.config.ProxyConfig>
+    </chainedProxies>
+    -->
+</com.kingfisher.proxy.config.AllConfig>

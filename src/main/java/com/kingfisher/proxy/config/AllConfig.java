@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
+import com.thoughtworks.xstream.XStream;
 
 public class AllConfig {
 
@@ -24,6 +25,7 @@ public class AllConfig {
 		proxyPort = 8081;
 		variables = new HashMap<String, String>();
 		chainedProxies = new ArrayList<ProxyConfig>();
+		ruleConfigs = new ArrayList<RuleConfig>();
 	}
 
 	public String getProxyHost() {
@@ -80,6 +82,13 @@ public class AllConfig {
 		proxy.setPort(80);
 		proxy.getBypassHosts().add("*slcq*");
 		c.chainedProxies.add(proxy);
-		System.out.println(new Gson().toJson(c));
+
+		RuleConfig rc = new RuleConfig();
+		rc.setUrl("http://abc.com");
+		rc.setScript("<script>");
+		c.getRuleConfigs().add(rc);
+
+		System.out.println(new XStream().toXML(c));
+		//System.out.println(new Gson().toJson(c));
 	}
 }

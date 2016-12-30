@@ -2,14 +2,15 @@ package com.kingfisher.proxy;
 
 import com.google.gson.*;
 import com.kingfisher.proxy.config.*;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,40 +26,9 @@ public class ProxyStarter {
 
     static long lastConfigFileModifiedTS = 0;
 
-    private static final String DEFAULT_CONFIG_JSON = "sample.config.json";
+    private static final String DEFAULT_CONFIG = "sample.config.xml";
 
     public static void main(String[] args) {
-
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(Filter.class, new JsonDeserializer() {
-            private Gson gson = new Gson();
-            public Filter deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-            throws JsonParseException {
-
-                Filter filter = new Filter();
-                JsonObject jsonObject = (JsonObject) json;
-                String type = jsonObject.get("type").getAsString();
-                JsonObject configElement = (JsonObject) jsonObject.get("config");
-
-                filter.setType(type);
-
-                Object config = null;
-
-                if ("answer".equalsIgnoreCase(type)) {
-                    config = gson.fromJson(configElement, HttpResponseBuilder.class);
-                } else if ("mapping".equalsIgnoreCase(type)) {
-                    config = gson.fromJson(configElement, MappingConfig.class);
-                } else if ("handler".equalsIgnoreCase(type)) {
-                    config = gson.fromJson(configElement, HandlerConfig.class);
-                }
-
-                filter.setConfig(config);
-
-                return filter;
-            }
-        });
-
-        final Gson gson = gsonBuilder.create();
 
         // read from arguments
         final KingfisherHttpProxy proxy = new KingfisherHttpProxy();
@@ -79,8 +49,7 @@ public class ProxyStarter {
                                     logger.info("Detect config file {} changed, reloading...",
                                             configFile.getAbsolutePath());
                                 }
-                                AllConfig config = gson.fromJson(FileUtils.readFileToString(configFile),
-                                        AllConfig.class);
+                                AllConfig config = readConfig(FileUtils.readFileToString(configFile, "UTF-8"));
                                 proxy.loadConfig(config);
                                 lastConfigFileModifiedTS = configFile.lastModified();
                                 if (logger.isInfoEnabled()) {
@@ -94,7 +63,7 @@ public class ProxyStarter {
                 }, 5, 5, TimeUnit.SECONDS);
 
                 try {
-                    config = new Gson().fromJson(FileUtils.readFileToString(configFile), AllConfig.class);
+                    config = readConfig(FileUtils.readFileToString(configFile, "UTF-8"));
                     lastConfigFileModifiedTS = configFile.lastModified();
                 } catch (Exception e) {
                     logger.error("Failed to load config, abort!", e);
@@ -110,8 +79,8 @@ public class ProxyStarter {
 
         if (config == null) {
             try {
-                InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(DEFAULT_CONFIG_JSON);
-                config = gson.fromJson(new InputStreamReader(resourceAsStream, Constants.utf8), AllConfig.class);
+                InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(DEFAULT_CONFIG);
+                config = readConfig(IOUtils.toString(resourceAsStream, Constants.utf8));
 
                 logger.info("rules:{}", config.getRuleConfigs());
 
@@ -123,5 +92,9 @@ public class ProxyStarter {
         }
 
         proxy.startProxy(config);
+    }
+
+    private static AllConfig readConfig(String configuration) throws IOException {
+        return (AllConfig)new XStream().fromXML(configuration);
     }
 }

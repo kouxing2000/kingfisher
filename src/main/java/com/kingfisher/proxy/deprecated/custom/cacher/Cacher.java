@@ -1,7 +1,7 @@
-package com.kingfisher.proxy.custom.cacher;
+package com.kingfisher.proxy.deprecated.custom.cacher;
 
 import com.kingfisher.proxy.Context;
-import com.kingfisher.proxy.custom.CustomHandler;
+import com.kingfisher.proxy.deprecated.custom.CustomHandler;
 import com.kingfisher.proxy.resolver.InternetFileResolver;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;

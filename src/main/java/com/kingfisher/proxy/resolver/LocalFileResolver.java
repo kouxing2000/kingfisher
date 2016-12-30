@@ -33,6 +33,7 @@ public class LocalFileResolver implements URLResolver {
 		contentTypes.put("js", "text/javascript");
 		contentTypes.put("gif", "image/gif");
 		contentTypes.put("jpg", "image/jpg");
+		contentTypes.put("xml", "application/xml");
 	}
 
 	private String fetchContentType(String url) {
@@ -45,8 +46,9 @@ public class LocalFileResolver implements URLResolver {
 		}
 
 		if (contentType == null) {
-			MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
-			contentType = mimeTypesMap.getContentType(url);
+//			MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
+//			contentType = mimeTypesMap.getContentType(url);
+			contentType = "text/html";
 		}
 
 		return contentType;

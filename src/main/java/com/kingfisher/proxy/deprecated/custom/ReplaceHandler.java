@@ -1,4 +1,4 @@
-package com.kingfisher.proxy.custom;
+package com.kingfisher.proxy.deprecated.custom;
 
 import com.kingfisher.proxy.resolver.InternetFileResolver;
 import com.kingfisher.proxy.Context;
@@ -15,8 +15,6 @@ import java.util.Map;
 public class ReplaceHandler extends InternetFileResolver implements CustomHandler{
 
     private static final Logger logger = LoggerFactory.getLogger(ReplaceHandler.class);
-
-    private InternetFileResolver internetFileResolver = new InternetFileResolver();
 
     private Map<String, String> mappings = new HashMap<String, String>();
 
