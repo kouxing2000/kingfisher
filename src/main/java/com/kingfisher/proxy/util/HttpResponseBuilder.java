@@ -8,7 +8,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,12 +77,10 @@ public class HttpResponseBuilder {
         return this;
     }
 
-    private static final Charset utf8Charset = Charset.forName("UTF-8");
-
     public HttpResponseBuilder from(DefaultFullHttpResponse existingResponse) {
         version = existingResponse.getProtocolVersion().toString();
         statusCode = existingResponse.getStatus().code();
-        body = existingResponse.content().toString(utf8Charset);
+        body = existingResponse.content().toString(Constants.utf8);
         HttpHeaders responseHeaders = existingResponse.headers();
         this.headers = new HashMap<String, String>();
 

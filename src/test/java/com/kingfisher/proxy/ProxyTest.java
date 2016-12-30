@@ -4,7 +4,7 @@ import org.junit.Test;
 
 public class ProxyTest {
 
-	@Test
+	//@Test
 	public void testProxy() {
 		ProxyStarter.main(null);
 		

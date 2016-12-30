@@ -50,11 +50,11 @@
             ]]></script>
         </com.kingfisher.proxy.config.RuleConfig>
         <com.kingfisher.proxy.config.RuleConfig>
-            <url>https://${env}.com/q/%keyword%/</url>
+            <url>https://${env}.com/4/%keyword%/</url>
             <script><![CDATA[
 
                 print(keyword);
-                delegator.read("https://www.stubhub.com/find/s/?q=" + keyword);
+                delegator.read("https://github.com/search?q=" + keyword);
 
             ]]></script>
         </com.kingfisher.proxy.config.RuleConfig>

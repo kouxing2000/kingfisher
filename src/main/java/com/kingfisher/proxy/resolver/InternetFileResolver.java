@@ -28,15 +28,21 @@ public class InternetFileResolver implements URLResolver {
 
 	private static Logger logger = LoggerFactory.getLogger(InternetFileResolver.class);
 
+
 	private static final List<String> requestCopyHeaderNames = new ArrayList<String>();
 	static {
 		requestCopyHeaderNames.add(HttpHeaders.Names.AUTHORIZATION);
 		requestCopyHeaderNames.add(HttpHeaders.Names.COOKIE);
 		requestCopyHeaderNames.add(HttpHeaders.Names.USER_AGENT);
+		requestCopyHeaderNames.add(HttpHeaders.Names.ACCEPT);
+		requestCopyHeaderNames.add(HttpHeaders.Names.ACCEPT_ENCODING);
+		requestCopyHeaderNames.add(HttpHeaders.Names.ACCEPT_LANGUAGE);
 	}
 
 	private static final List<String> responseCopyHeaderNames = new ArrayList<String>();
 	static {
+		responseCopyHeaderNames.add(HttpHeaders.Names.CONTENT_LENGTH);
+		responseCopyHeaderNames.add(HttpHeaders.Names.CONNECTION);
 		responseCopyHeaderNames.add(HttpHeaders.Names.CONTENT_TYPE);
 		responseCopyHeaderNames.add(HttpHeaders.Names.CONTENT_ENCODING);
 		responseCopyHeaderNames.add(HttpHeaders.Names.COOKIE);
@@ -61,7 +67,6 @@ public class InternetFileResolver implements URLResolver {
 		org.apache.http.HttpResponse response = null;
 		try {
 			response = httpclient.execute(httpget);
-			context.setOriginResponse(response);
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
 				InputStream instream = entity.getContent();
@@ -85,12 +90,13 @@ public class InternetFileResolver implements URLResolver {
 		DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
 				HttpResponseStatus.OK, buffer);
 
-		HttpHeaders.setContentLength(defaultFullHttpResponse, buffer.readableBytes());
+		// bug here
+		// HttpHeaders.setContentLength(defaultFullHttpResponse, buffer.readableBytes());
 		if (response != null) {
-			for (String header : responseCopyHeaderNames) {
-				Header firstHeader = response.getFirstHeader(header);
-				if (firstHeader != null) {
-					defaultFullHttpResponse.headers().set(header, firstHeader.getValue());
+			Header[] allHeaders = response.getAllHeaders();
+			for (Header header : allHeaders) {
+				if (header != null) {
+					defaultFullHttpResponse.headers().add(header.getName(), header.getValue());
 				}
 			}
 		}

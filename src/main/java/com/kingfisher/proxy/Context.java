@@ -35,17 +35,4 @@ public class Context {
 		return variables;
 	}
 
-	//TODO replace it with netty's HttpResponse and remove origin in name
-	@Deprecated
-	private HttpResponse originResponse;
-
-	@Deprecated
-	public HttpResponse getOriginResponse() {
-		return originResponse;
-	}
-
-	@Deprecated
-	public void setOriginResponse(HttpResponse originResponse) {
-		this.originResponse = originResponse;
-	}
 }

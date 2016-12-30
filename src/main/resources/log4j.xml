@@ -46,8 +46,8 @@
         <level value="info"/>
     </logger>
     <root>
-    	<!-- change it to debug/trace if you want detail log -->
-        <level value="info"/>
+    	<!-- change it to debug if you want detail log -->
+        <level value="debug"/>
         <appender-ref ref="ASYNC"/>
     </root>
 </log4j:configuration>
