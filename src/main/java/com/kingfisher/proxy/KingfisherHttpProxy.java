@@ -118,6 +118,11 @@ public class KingfisherHttpProxy {
                         logger.info("httpResponse={}", httpResponse);
                     }
 
+                    if (httpResponse == null) {
+                        //forward to real server
+                        return null;
+                    }
+
                 } catch (Throwable exp) {
 
                     logger.error("", exp);
