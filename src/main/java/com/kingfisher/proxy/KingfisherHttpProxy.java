@@ -33,6 +33,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,18 +47,15 @@ public class KingfisherHttpProxy {
 
     private static final String HTTPS_SERVER_INTERNAL_HOST = "127.0.0.1";
 
-    private static final int HTTPS_SERVER_INTERNAL_PORT = 18443;
-    private static final int HTTP_SERVER_INTERNAL_PORT = 18080;
+    private static final AtomicInteger HTTPS_SERVER_INTERNAL_PORT = new AtomicInteger(18443);
+    //private static int HTTP_SERVER_INTERNAL_PORT = 18080)
 
     private static final String PROXY_BY = "Proxy-By";
     private static final String KINGFISH_WEB_DEBUG_PROXY = "Kingfisher-Web-Debug-Proxy";
 
     private static final Logger logger = LoggerFactory.getLogger(KingfisherHttpProxy.class);
 
-    private final SSLContext sslContext = SSLContextProvider.get();
-
-    // new SelfSignedSslEngineSource(
-    // "littleproxy_keystore.jks").getSslContext();
+    private final SSLContext sslContext = SSLContextProvider.get("server_example.com_cert.p12");
 
     /**
      * @param context
@@ -277,11 +275,6 @@ public class KingfisherHttpProxy {
 
         proxyServer = bootstrap.start();
 
-        /**
-         * start an internal https server, proxy forward the https request to it
-         */
-        startHttpsInternalServer();
-
     }
 
     private static final String NAMED_GROUP = "%\\w+?%";
@@ -314,7 +307,9 @@ public class KingfisherHttpProxy {
 
         urlMappings.clear();
         urlMappingNamedGroupMappings.clear();
-        ClientToProxyConnection.clearHttpsHostPortMapping();
+
+        //TODO need further clean up for internal https
+        //ClientToProxyConnection.clearHttpsHostPortMapping();
 
         for (RuleConfig ruleConfig : config.getRuleConfigs()) {
 
@@ -366,16 +361,43 @@ public class KingfisherHttpProxy {
         return new JavaScriptHttpRequestHandler(ruleConfig);
     }
 
+    private Set<String> httpsDomainSet = new HashSet<String>();
+
     private String addSourceUrls(String sourceUrl) {
         String sourceURL = fillVariable(sourceUrl, config.getVariables());
 
         String hostAndPort = ProxyUtils.parseHostAndPort(sourceURL);
         if (sourceURL.startsWith("https")) {
+
             if (!hostAndPort.contains(":")) {
                 hostAndPort = hostAndPort + ":443";
             }
-            ClientToProxyConnection.addHttpsHostPortMapping(hostAndPort, HTTPS_SERVER_INTERNAL_HOST + ":"
-                    + HTTPS_SERVER_INTERNAL_PORT);
+
+            String targetDomain = hostAndPort.substring(0, hostAndPort.indexOf(":"));
+
+            if (!httpsDomainSet.contains(targetDomain)) {
+
+                httpsDomainSet.add(targetDomain);
+
+                /**
+                 * start an internal https server, proxy forward the https request to it
+                 */
+                String httpsServerInternalHost = HTTPS_SERVER_INTERNAL_HOST;
+                int httpsServerInternalPort = HTTPS_SERVER_INTERNAL_PORT.incrementAndGet();
+
+                //TODO create/load the certificate for the particular domain
+
+                startHttpsInternalServer(targetDomain,
+                        httpsServerInternalHost, httpsServerInternalPort,
+                        // load the certificate for the particular domain
+                        SSLContextProvider.get("server_"
+                                 + targetDomain +
+                                "_cert.p12"));
+
+                ClientToProxyConnection.addHttpsHostPortMapping(hostAndPort, httpsServerInternalHost + ":"
+                        + httpsServerInternalPort);
+            }
+
         } else {
 
         }
@@ -390,10 +412,13 @@ public class KingfisherHttpProxy {
 
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
-    private Channel internalHttpsBindChannel;
+    private List<Channel> internalHttpsBindChannels = new ArrayList<Channel>();
     private final ServerBootstrap internalHttpsServerBootstrap = new ServerBootstrap();
 
-    private void startHttpsInternalServer() {
+    private void startHttpsInternalServer(String domain, String host, int port, final SSLContext sslContext) {
+
+        logger.info("try to bind internal https port for domain:{}, {}:{}", new Object[]{domain, host, port});
+
         try {
             internalHttpsServerBootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -414,13 +439,13 @@ public class KingfisherHttpProxy {
                         }
                     });
 
-            logger.info("try to bind internal https port, {}:{}", HTTPS_SERVER_INTERNAL_HOST, HTTPS_SERVER_INTERNAL_PORT);
-            internalHttpsBindChannel = internalHttpsServerBootstrap
-                    .bind(HTTPS_SERVER_INTERNAL_HOST, HTTPS_SERVER_INTERNAL_PORT).sync().channel();
+            Channel channel = internalHttpsServerBootstrap
+                    .bind(host, port).sync().channel();
+            internalHttpsBindChannels.add(channel);
             logger.info("bind success!");
 
         } catch (Exception e) {
-            logger.error("startHttpsInternalServer", new RuntimeException(e));
+            logger.error("startHttpsInternalServer", e);
         }
     }
 
@@ -557,11 +582,14 @@ public class KingfisherHttpProxy {
 
     public void stop() {
         try {
-            proxyServer.stop();
-            clientGroup.shutdownGracefully();
-            internalHttpsBindChannel.closeFuture().sync();
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
+            logger.info("stop proxy ...");
+            //proxyServer.stop();
+            clientGroup.shutdownNow();
+            for (Channel channel : internalHttpsBindChannels) {
+                channel.close();
+            }
+            bossGroup.shutdownNow();
+            workerGroup.shutdownNow();
         } catch (Exception e) {
             logger.error("when stop", e);
         }

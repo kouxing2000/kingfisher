@@ -59,6 +59,7 @@ public class ProxyStarter {
                         } catch (Exception e) {
                             logger.error("reload config", e);
                         }
+                        //check every 5 seconds
                     }
                 }, 5, 5, TimeUnit.SECONDS);
 
@@ -92,6 +93,13 @@ public class ProxyStarter {
         }
 
         proxy.startProxy(config);
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                logger.error("detect JVM exit, stop proxy!");
+                proxy.stop();
+            }
+        });
     }
 
     private static AllConfig readConfig(String configuration) throws IOException {

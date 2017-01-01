@@ -14,7 +14,7 @@
         -->
         <entry>
             <string>env</string>
-            <string>test001</string>
+            <string>stubhub</string>
         </entry>
 
     </variables>
@@ -23,7 +23,7 @@
     <ruleConfigs>
         <!-- example: mock response -->
         <com.kingfisher.proxy.config.RuleConfig>
-            <url>http://${env}.com/1/</url>
+            <url>https://${env}.com/1/</url>
             <script><![CDATA[
             var imports = new JavaImporter(java.lang, java.util);
             with (imports) {
