@@ -27,7 +27,7 @@ The tool will behavior as below
 3. When request match certain URL patterns, it respond with content from
     - Local files. Therefore, people will not only to serve un-minified file but also verify modification very quickly.
     - Mock services. In order to mock API requests from a predefined mock server.
-    - Other similar enviornment. It could be useful while multiple QA boxes.
+    - Other similar environment. It could be useful while multiple QA boxes.
 
 The tool will be able to start from command line and read a configuration file in order to figure out how to match URL to local files.
 
@@ -40,9 +40,17 @@ The tool will be able to start from command line and read a configuration file i
 # Build from source
 
   1. `make build` or `mvn compile assembly:single`
-  2. Change the `config.json` at root dir per your case. (read config.json for details)
-  3. `make start` or `java -jar target/proxy-1.0.0-SNAPSHOT-jar-with-dependencies.jar config.json`
+  2. Change the `sample.config.xml` at root dir per your case. (read it for details)
+  3. `make start` or `java -jar target/proxy-2.0.0-jar-with-dependencies.jar ../src/main/resources/sample.config.xml`
 
+# Install the root CA certification (Chrome)
+
+  1. Open chrome://settings/
+  2. Click show advanced settings
+  3. Click button: manage certificates
+  4. Drag the file (proxy_cert/cacert.pem) in.
+  5. Find it (KingFisher CA), make it all trust
+  6. Save
 
 *NOTE*: read the `Makefile` for details if those two does not work well. ;)
 
