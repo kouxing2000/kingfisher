@@ -1,6 +1,8 @@
 package com.kingfisher.proxy;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateException;
@@ -16,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 public class SSLContextProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SSLContextProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(SSLContextProvider.class);
 
     public static SSLContext get(String targetDomain) {
 
@@ -58,7 +60,7 @@ public class SSLContextProvider {
             }};
             sslContext.init(kmf.getKeyManagers(), trustManagers, null);
         } catch (Exception e) {
-            LOGGER.error("System Exit, due to unable to create SSLContext", e);
+            logger.error("System Exit, due to unable to create SSLContext", e);
 
             try {
                 Thread.sleep(1000);
@@ -74,6 +76,15 @@ public class SSLContextProvider {
     public static InputStream loadCert(String targetDomain) {
         String certFile = "server_cert" + File.separator
                 + targetDomain + "_cert.p12";
+        File file = new File(certFile);
+        if (file.exists()) {
+            try {
+                logger.info("found from {}", file.getAbsolutePath());
+                return new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                return null;
+            }
+        }
         return ClassLoader.getSystemResourceAsStream(certFile);
     }
 }

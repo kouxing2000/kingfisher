@@ -39,9 +39,9 @@ The tool will be able to start from command line and read a configuration file i
 
 # Build from source
 
-  1. `make build` or `mvn compile assembly:single`
+  1. `mvn compile assembly:single`
   2. Change the `sample.config.xml` at root dir per your case. (read it for details)
-  3. `make start` or `java -jar target/proxy-2.0.0-jar-with-dependencies.jar ../src/main/resources/sample.config.xml`
+  3. unzip the release zip file, sh run.sh
 
 # Install the root CA certification (Chrome)
 
@@ -51,8 +51,6 @@ The tool will be able to start from command line and read a configuration file i
   4. Drag the file (proxy_cert/cacert.pem) in.
   5. Find it (KingFisher CA), make it all trust
   6. Save
-
-*NOTE*: read the `Makefile` for details if those two does not work well. ;)
 
 # Other library worth to compare
 

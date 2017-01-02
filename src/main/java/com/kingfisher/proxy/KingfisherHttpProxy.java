@@ -379,9 +379,9 @@ public class KingfisherHttpProxy {
 
             String targetDomain = InternetDomainName.from(hostAndPort.substring(0, hostAndPort.indexOf(":"))).topPrivateDomain().name();
 
-            checkAndGenerateCertification(targetDomain);
-
             if (!httpsDomainSet.contains(targetDomain)) {
+
+                checkAndGenerateCertification(targetDomain);
 
                 httpsDomainSet.add(targetDomain);
 
@@ -390,9 +390,6 @@ public class KingfisherHttpProxy {
                  */
                 String httpsServerInternalHost = HTTPS_SERVER_INTERNAL_HOST;
                 int httpsServerInternalPort = HTTPS_SERVER_INTERNAL_PORT.incrementAndGet();
-
-                //TODO create/load the certificate for the particular domain
-
 
                 startHttpsInternalServer(targetDomain,
                         httpsServerInternalHost, httpsServerInternalPort,
@@ -420,6 +417,7 @@ public class KingfisherHttpProxy {
     private void checkAndGenerateCertification(String targetDomain) {
 
         if (SSLContextProvider.loadCert(targetDomain) != null) {
+            //if already generated
             return;
         }
 
@@ -432,7 +430,6 @@ public class KingfisherHttpProxy {
                 System.exit(0);
             }
 
-            //TODO consider build war
             final Process process = Runtime.getRuntime().exec("sh sign_server.sh " + targetDomain, new String[]{}, folder);
 
             Future<String> future = executorService.submit(new Callable<String>() {
@@ -489,9 +486,13 @@ public class KingfisherHttpProxy {
             future.get();
             errFuture.get();
 
+            if (SSLContextProvider.loadCert(targetDomain) != null) {
+                logger.info("generate cert successfully for {}", targetDomain);
+            }
+
         } catch (Exception e) {
             logger.error("failed to generate certification file for domain:" + targetDomain, e);
-            logger.error("you need run " + "'sh sign_server.sh " + targetDomain + "' manually!");
+            logger.error("you need run " + "'sh sign_server.sh " + targetDomain + "' in proxy_cert folder manually!");
             System.exit(0);
         }
     }

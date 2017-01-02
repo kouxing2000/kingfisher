@@ -1,0 +1,44 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <formats>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+
+        <fileSet>
+            <directory>release</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+                <include>run.sh</include>
+            </includes>
+            <lineEnding>unix</lineEnding>
+        </fileSet>
+
+        <fileSet>
+            <directory>proxy_cert</directory>
+            <outputDirectory>proxy_cert</outputDirectory>
+            <includes>
+                <include>*.pem</include>
+                <include>*.sh</include>
+                <include>*.cnf</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>target</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+                <include>kingfisher-single-*.jar</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>
