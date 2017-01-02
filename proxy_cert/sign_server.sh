@@ -48,9 +48,9 @@ echo ----------
 echo step 4 : copy
 echo ----------
 echo $serverFileName.p12
-cp $serverFileName.p12  ../src/main/resources/server_cert
-cp $serverFileName.p12  ../target/classes/server_cert
-cp $serverFileName.p12  ../server_cert
+cp $serverFileName.p12  ../src/main/resources/server_cert/
+cp $serverFileName.p12  ../target/classes/server_cert/
+cp $serverFileName.p12  ../server_cert/
 
 
 echo ----------
