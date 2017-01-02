@@ -1,5 +1,6 @@
 package com.kingfisher.proxy;
 
+import com.google.common.net.InternetDomainName;
 import com.kingfisher.proxy.config.AllConfig;
 import com.kingfisher.proxy.config.ProxyConfig;
 import com.kingfisher.proxy.config.RuleConfig;
@@ -16,6 +17,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.ClientToProxyConnection;
@@ -26,13 +28,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,7 +59,7 @@ public class KingfisherHttpProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(KingfisherHttpProxy.class);
 
-    private final SSLContext sslContext = SSLContextProvider.get("server_example.com_cert.p12");
+    private final SSLContext sslContext = SSLContextProvider.get("example.com");
 
     /**
      * @param context
@@ -373,7 +377,9 @@ public class KingfisherHttpProxy {
                 hostAndPort = hostAndPort + ":443";
             }
 
-            String targetDomain = hostAndPort.substring(0, hostAndPort.indexOf(":"));
+            String targetDomain = InternetDomainName.from(hostAndPort.substring(0, hostAndPort.indexOf(":"))).topPrivateDomain().name();
+
+            checkAndGenerateCertification(targetDomain);
 
             if (!httpsDomainSet.contains(targetDomain)) {
 
@@ -387,12 +393,11 @@ public class KingfisherHttpProxy {
 
                 //TODO create/load the certificate for the particular domain
 
+
                 startHttpsInternalServer(targetDomain,
                         httpsServerInternalHost, httpsServerInternalPort,
                         // load the certificate for the particular domain
-                        SSLContextProvider.get("server_"
-                                 + targetDomain +
-                                "_cert.p12"));
+                        SSLContextProvider.get(targetDomain));
 
                 ClientToProxyConnection.addHttpsHostPortMapping(hostAndPort, httpsServerInternalHost + ":"
                         + httpsServerInternalPort);
@@ -408,6 +413,87 @@ public class KingfisherHttpProxy {
             sourceURL = sourceURL + "/";
         }
         return sourceURL;
+    }
+
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+
+    private void checkAndGenerateCertification(String targetDomain) {
+
+        if (SSLContextProvider.loadCert(targetDomain) != null) {
+            return;
+        }
+
+        try {
+            File folder = new File("proxy_cert");
+            boolean exists = folder.exists();
+
+            if (!exists) {
+                logger.error("no proxy_cert folder found!");
+                System.exit(0);
+            }
+
+            //TODO consider build war
+            final Process process = Runtime.getRuntime().exec("sh sign_server.sh " + targetDomain, new String[]{}, folder);
+
+            Future<String> future = executorService.submit(new Callable<String>() {
+                @Override
+                public String call() {
+                    BufferedReader reader = null;
+                    try {
+                        reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                        String line = reader.readLine();
+                        while (line != null) {
+                            System.out.println("process info :" + line);
+
+                            line = reader.readLine();
+                        }
+                        return null;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return null;
+                    } finally {
+                        IOUtils.closeQuietly(reader);
+                        System.out.println(Thread.currentThread() + " over with " + process);
+                    }
+
+                }
+
+
+            });
+            Future<String> errFuture = executorService.submit(new Callable<String>() {
+                @Override
+                public String call() {
+                    BufferedReader reader = null;
+                    try {
+                        reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                        String line = reader.readLine();
+                        while (line != null) {
+                            System.out.println("process error:" + line);
+
+                            line = reader.readLine();
+                        }
+                        return null;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return null;
+                    } finally {
+                        IOUtils.closeQuietly(reader);
+                        System.out.println(Thread.currentThread() + " over with " + process);
+                    }
+
+                }
+
+
+            });
+
+            future.get();
+            errFuture.get();
+
+        } catch (Exception e) {
+            logger.error("failed to generate certification file for domain:" + targetDomain, e);
+            logger.error("you need run " + "'sh sign_server.sh " + targetDomain + "' manually!");
+            System.exit(0);
+        }
     }
 
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);

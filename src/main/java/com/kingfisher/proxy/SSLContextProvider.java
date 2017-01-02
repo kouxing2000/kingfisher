@@ -1,5 +1,6 @@
 package com.kingfisher.proxy;
 
+import java.io.File;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateException;
@@ -17,7 +18,7 @@ public class SSLContextProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SSLContextProvider.class);
 
-    public static SSLContext get(String pkcs12FileName) {
+    public static SSLContext get(String targetDomain) {
 
         SSLContext sslContext = null;
 
@@ -26,10 +27,11 @@ public class SSLContextProvider {
 
             //TODO support use a external certification file
             KeyStore ks = KeyStore.getInstance("PKCS12");
-            InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(pkcs12FileName);
+            InputStream resourceAsStream = loadCert(targetDomain);
 
             if (resourceAsStream == null) {
-                throw new RuntimeException(pkcs12FileName + " not found!");
+                throw new RuntimeException("cert for " + targetDomain +
+                        " not found!");
             }
 
             ks.load(resourceAsStream, "123456".toCharArray());
@@ -67,5 +69,11 @@ public class SSLContextProvider {
         }
 
         return sslContext;
+    }
+
+    public static InputStream loadCert(String targetDomain) {
+        String certFile = "server_cert" + File.separator
+                + targetDomain + "_cert.p12";
+        return ClassLoader.getSystemResourceAsStream(certFile);
     }
 }
