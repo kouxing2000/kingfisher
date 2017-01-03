@@ -60,10 +60,10 @@ The tool will be able to start from command line and read a configuration file i
       used to access http request
       [source](src/main/java/com/kingfisher/proxy/Context.java)
      - delegator
-     used to generate response from local resource or remote URL resource
+      used to generate response from local resource or remote URL resource
       [source](src/main/java/com/kingfisher/proxy/resolver/Delegator.java)
      - responseBuilder
-     used to build response from sketch or existing response
+      used to build response from sketch or existing response
       [source](src/main/java/com/kingfisher/proxy/util/HttpResponseBuilder.java)
 
 # Other library worth to compare
