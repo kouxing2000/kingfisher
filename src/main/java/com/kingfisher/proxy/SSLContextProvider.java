@@ -27,7 +27,6 @@ public class SSLContextProvider {
         try {
             sslContext = SSLContext.getInstance("TLS");
 
-            //TODO support use a external certification file
             KeyStore ks = KeyStore.getInstance("PKCS12");
             InputStream resourceAsStream = loadCert(targetDomain);
 
