@@ -56,14 +56,14 @@ The tool will be able to start from command line and read a configuration file i
 
   1. Java Script
   2. embed variable:
-     - context
-      used to access http request
+     - context <br/>
+      used to access http request <br/>
       [source](src/main/java/com/kingfisher/proxy/Context.java)
-     - delegator
-      used to generate response from local resource or remote URL resource
+     - delegator <br/>
+      used to generate response from local resource or remote URL resource <br/>
       [source](src/main/java/com/kingfisher/proxy/resolver/Delegator.java)
-     - responseBuilder
-      used to build response from sketch or existing response
+     - responseBuilder <br/>
+      used to build response from sketch or existing response <br/>
       [source](src/main/java/com/kingfisher/proxy/util/HttpResponseBuilder.java)
 
 # Other library worth to compare
