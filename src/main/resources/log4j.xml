@@ -40,7 +40,7 @@
         <level value="info"/>
     </logger>
     <logger name="com.kingfisher.proxy">
-        <level value="debug"/>
+        <level value="info"/>
     </logger>
     <logger name="org.littleshoot.proxy.impl.ClientToProxyConnection.Kingfisher">
         <level value="info"/>

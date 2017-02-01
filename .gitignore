@@ -4,6 +4,7 @@
 /.classpath
 /.project
 *.class
+.DS_Store
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

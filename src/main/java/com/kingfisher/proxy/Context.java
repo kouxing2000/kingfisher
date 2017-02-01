@@ -1,7 +1,6 @@
 package com.kingfisher.proxy;
 
 import io.netty.handler.codec.http.HttpRequest;
-import org.apache.http.HttpResponse;
 
 import java.util.HashMap;
 import java.util.Map;

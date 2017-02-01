@@ -286,6 +286,22 @@ public class KingfisherHttpProxy {
     private static final Pattern namedGroupPattern = Pattern.compile(NAMED_GROUP);
 
     public void loadConfig(AllConfig configIn) {
+
+        /**
+         * clean up existing
+         */
+        for (Channel channel : internalHttpsBindChannels) {
+            channel.close();
+        }
+
+        internalHttpsBindChannels.clear();
+        urlMappings.clear();
+        urlMappingNamedGroupMappings.clear();
+
+        httpsDomainSet.clear();
+
+        ClientToProxyConnection.clearHttpsHostPortMapping();
+
         this.config = configIn;
 
         if (config.getVariables() != null) {
@@ -309,11 +325,6 @@ public class KingfisherHttpProxy {
             logger.info("variables:{}", variables);
         }
 
-        urlMappings.clear();
-        urlMappingNamedGroupMappings.clear();
-
-        //TODO need further clean up for internal https
-        //ClientToProxyConnection.clearHttpsHostPortMapping();
 
         for (RuleConfig ruleConfig : config.getRuleConfigs()) {
 
@@ -377,7 +388,8 @@ public class KingfisherHttpProxy {
                 hostAndPort = hostAndPort + ":443";
             }
 
-            String targetDomain = InternetDomainName.from(hostAndPort.substring(0, hostAndPort.indexOf(":"))).topPrivateDomain().name();
+            String targetDomain = hostAndPort.substring(0, hostAndPort.indexOf(":"));
+//            targetDomain = InternetDomainName.from(targetDomain).topPrivateDomain().name();
 
             if (!httpsDomainSet.contains(targetDomain)) {
 
@@ -500,13 +512,13 @@ public class KingfisherHttpProxy {
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
     private List<Channel> internalHttpsBindChannels = new ArrayList<Channel>();
-    private final ServerBootstrap internalHttpsServerBootstrap = new ServerBootstrap();
 
-    private void startHttpsInternalServer(String domain, String host, int port, final SSLContext sslContext) {
+    private void startHttpsInternalServer(String domain, String host, int port, final SSLContext sslContextParameter) {
 
         logger.info("try to bind internal https port for domain:{}, {}:{}", new Object[]{domain, host, port});
 
         try {
+            ServerBootstrap internalHttpsServerBootstrap = new ServerBootstrap();
             internalHttpsServerBootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
@@ -514,7 +526,7 @@ public class KingfisherHttpProxy {
                             // Create a default pipeline implementation.
                             ChannelPipeline p = ch.pipeline();
 
-                            SSLEngine engine = sslContext.createSSLEngine();
+                            SSLEngine engine = sslContextParameter.createSSLEngine();
                             engine.setUseClientMode(false);
                             p.addLast("ssl", new SslHandler(engine));
 
