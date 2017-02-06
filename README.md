@@ -39,9 +39,11 @@ The tool will be able to start from command line and read a configuration file i
 
 # Build from source
 
-  1. `mvn compile assembly:single`
-  2. Change the `sample.config.xml` at root dir per your case. (read it for details)
-  3. unzip the release zip file, sh run.sh
+  1. `mvn package` 
+     which will generate kingfisher/target/kingfisher-release-2.0.0.zip
+  2. unzip the release zip file, cd in
+  3. Change the `sample.config.xml` under it (read it for details)
+  4. sh run.sh under it
 
 # Install the root CA certification (Chrome)
 
