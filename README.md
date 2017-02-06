@@ -40,10 +40,11 @@ The tool will be able to start from command line and read a configuration file i
 # Build from source
 
   1. `mvn package` 
-     which will generate kingfisher/target/kingfisher-release-2.0.0.zip
-  2. unzip the release zip file, cd in
-  3. Change the `sample.config.xml` under it (read it for details)
-  4. sh run.sh under it
+    - It will generate kingfisher/target/kingfisher-release-2.0.0.zip
+  2. unzip the release zip file  `unzip kingfisher-release-2.0.0.zip`
+  3. Modify the configuration file : `sample.config.xml` accordingly 
+    - examples are provided, read it for details
+  4. `sh run.sh` start the proxy!
 
 # Install the root CA certification (Chrome)
 
