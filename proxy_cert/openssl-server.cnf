@@ -36,7 +36,7 @@ subjectKeyIdentifier        = hash
 basicConstraints        = CA:FALSE
 keyUsage            = digitalSignature, keyEncipherment
 #subjectAltName          = @alternate_names
-subjectAltName           = ${ENV::subjectAltName}
+#subjectAltName           = ${ENV::subjectAltName}
 nsComment           = "OpenSSL Generated Certificate"
 
 ####################################################################
