@@ -4,6 +4,7 @@ import com.kingfisher.proxy.config.RuleConfig;
 import com.kingfisher.proxy.intf.HttpRequestHandler;
 import com.kingfisher.proxy.resolver.Delegator;
 import com.kingfisher.proxy.util.HttpResponseBuilder;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
 
 import javax.script.Bindings;
@@ -46,6 +47,14 @@ public class JavaScriptHttpRequestHandler implements HttpRequestHandler {
             Delegator delegator = delegatorLocal.get();
             delegator.setContext(context);
             bindings.put("delegator", delegator);
+
+            String realUrl = context.getRequest().getUri();
+
+            if (context.isUsingHttps()) {
+                realUrl =  "https://" + context.getRequest().headers().get(HttpHeaders.Names.HOST) + realUrl;
+            }
+
+            bindings.put("realUrl", realUrl);
             bindings.put("responseBuilder", new HttpResponseBuilder());
 
             for (Map.Entry<String, String> e : context.getVariables().entrySet()) {

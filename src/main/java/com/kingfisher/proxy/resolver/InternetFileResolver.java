@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.HttpVersion;
 
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DecompressingHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,6 @@ import com.kingfisher.proxy.Context;
 public class InternetFileResolver implements URLResolver {
 
 	private static Logger logger = LoggerFactory.getLogger(InternetFileResolver.class);
-
 
 	private static final List<String> requestCopyHeaderNames = new ArrayList<String>();
 	static {
@@ -53,7 +54,7 @@ public class InternetFileResolver implements URLResolver {
 
 		byte[] bytearray = null;
 
-		HttpClient httpclient = HttpClientUtils.getNewHttpClient();
+		HttpClient httpclient = new DecompressingHttpClient(HttpClientUtils.getNewHttpClient());
 		HttpGet httpget = new HttpGet(url);
 		HttpHeaders headers = context.getRequest().headers();
 		if (headers != null) {
@@ -71,7 +72,18 @@ public class InternetFileResolver implements URLResolver {
 			if (entity != null) {
 				InputStream instream = entity.getContent();
 				try {
-					bytearray = IOUtils.toByteArray(instream);
+					boolean debug = false;
+					if (debug) {
+
+						Charset encoding = Charset.forName("UTF-8");
+						String responseString = IOUtils.toString(instream, encoding);
+						logger.debug(responseString);
+						instream = IOUtils.toInputStream(responseString, encoding);
+						bytearray = IOUtils.toByteArray(instream);
+
+					} else {
+						bytearray = IOUtils.toByteArray(instream);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
@@ -88,10 +100,11 @@ public class InternetFileResolver implements URLResolver {
 		}
 
 		DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-				HttpResponseStatus.OK, buffer);
+						HttpResponseStatus.valueOf(response.getStatusLine().getStatusCode()), buffer);
 
 		// bug here
 		// HttpHeaders.setContentLength(defaultFullHttpResponse, buffer.readableBytes());
+
 		if (response != null) {
 			Header[] allHeaders = response.getAllHeaders();
 			for (Header header : allHeaders) {

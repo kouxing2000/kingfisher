@@ -24,9 +24,9 @@ serverFileName=$server_folder/$1_cert
 echo ----------
 echo step 1 : generate server request
 echo ----------
-# server request
+# server
 export subjectAltName=DNS:$1,DNS:www.$1
-
+echo "subjectAltName $subjectAltName"
 openssl req -newkey rsa:2048 -sha256 -config openssl-server.cnf \
 -passout pass:123456 -subj "/C=US/ST=California/L=San Francisco/O=Global Security/OU=IT Department/CN=$1" \
  -keyout $serverFileName.key.pem -out $serverFileName.csr -outform PEM 

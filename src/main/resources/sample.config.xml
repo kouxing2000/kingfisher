@@ -92,10 +92,27 @@
             <url>http://winterbe.com/posts/2014/04/05/java8-nashorn-tutorial/</url>
             <script><![CDATA[
 
-                responseBuilder.from(delegator.read(context.request.uri));
+                responseBuilder.from(delegator.read(realUrl));
 
                 //NOTE: using replace() will only replaceFirst, the function in javascript, not in java
                 responseBuilder.body = responseBuilder.body.replaceAll("Java", "*******");
+
+                //print(responseBuilder.body);
+                responseBuilder.build();
+
+            ]]></script>
+        </com.kingfisher.proxy.config.RuleConfig>
+
+        <!-- replace string from body -->
+        <com.kingfisher.proxy.config.RuleConfig>
+            <disabled>false</disabled>
+            <url>https://www.stubhub.de/shape/catalog/venues/v3/venueconfigurations?*</url>
+            <script><![CDATA[
+
+                responseBuilder.from(delegator.read(realUrl));
+
+                //NOTE: using replace() will only replaceFirst, the function in javascript, not in java
+                responseBuilder.body = responseBuilder.body.replaceAll("transparent", "#000000");
 
                 //print(responseBuilder.body);
                 responseBuilder.build();

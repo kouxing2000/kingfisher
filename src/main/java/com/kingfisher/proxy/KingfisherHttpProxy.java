@@ -158,13 +158,17 @@ public class KingfisherHttpProxy {
 
                 String contentType;
 
-                if ("XMLHttpRequest".equals(httpRequest.headers().get("X-Requested-With"))) {
-                    contentType = "application/json;charset=UTF-8";
-                    httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, contentType);
+                if (!httpResponse.headers().contains(HttpHeaders.Names.CONTENT_TYPE)) {
+                    if ("XMLHttpRequest".equals(httpRequest.headers().get("X-Requested-With"))) {
+                        contentType = "application/json;charset=UTF-8";
+                        httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, contentType);
+                    }
                 }
 
-                if (isKeepAlive(httpRequest)) {
-                    httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+                if (!httpResponse.headers().contains(HttpHeaders.Names.CONNECTION)) {
+                    if (isKeepAlive(httpRequest)) {
+                        httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+                    }
                 }
 
                 httpResponse.headers().set("Generate-By", KINGFISH_WEB_DEBUG_PROXY);
