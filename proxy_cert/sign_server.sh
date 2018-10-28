@@ -24,12 +24,21 @@ serverFileName=$server_folder/$1_cert
 echo ----------
 echo step 1 : generate server request
 echo ----------
-# server
+# server request
 export subjectAltName=DNS:$1,DNS:www.$1
-echo "subjectAltName $subjectAltName"
-openssl req -newkey rsa:2048 -sha256 -config openssl-server.cnf \
--passout pass:123456 -subj "/C=US/ST=California/L=San Francisco/O=Global Security/OU=IT Department/CN=$1" \
+#echo "subjectAltName $subjectAltName"
+openssl req -newkey rsa:2048 -sha256 \
+ -config openssl-server.cnf \
+ -passout pass:123456 -subj "/C=US/ST=California/L=San Francisco/O=Global Security/OU=IT Department/CN=$1" \
  -keyout $serverFileName.key.pem -out $serverFileName.csr -outform PEM 
+
+# if you found error on Mac: 140735731753928:error:0E065068:configuration file routines:STR_COPY:variable has no value:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.50.2/libressl/crypto/conf/conf_def.c:573:line 39
+# then run brew update && brew upgrade
+# you will find openssl related log
+#  openssl is keg-only, which means it was not symlinked into /usr/local,
+#  because Apple has deprecated use of OpenSSL in favor of its own TLS and crypto libraries.
+#  If you need to have openssl first in your PATH run:
+#  echo 'export PATH="/usr/local/opt/openssl/bin:$PATH"' >> ~/.bash_profile
 
 echo ----------
 echo step 2 : sign it

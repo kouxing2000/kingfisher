@@ -37,7 +37,6 @@ basicConstraints        = CA:FALSE
 keyUsage            = digitalSignature, keyEncipherment
 #subjectAltName          = @alternate_names
 subjectAltName           = ${ENV::subjectAltName}
-#subjectAltName           = DNS:hostname,IP:192.168.0.1
 nsComment           = "OpenSSL Generated Certificate"
 
 ####################################################################
