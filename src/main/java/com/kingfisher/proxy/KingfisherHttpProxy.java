@@ -299,6 +299,7 @@ public class KingfisherHttpProxy {
     private static final String NAMED_GROUP = "%\\w+?%";
 
     private static final Pattern namedGroupPattern = Pattern.compile(NAMED_GROUP);
+    private static final Pattern domainNamePattern = Pattern.compile("([\\w\\d\\-\\_]+\\.)?([\\w\\d\\-\\_]+\\.[\\w\\d\\-\\_]+)");
 
     public void loadConfig(AllConfig configIn) {
 
@@ -405,6 +406,9 @@ public class KingfisherHttpProxy {
 
             String targetDomain = hostAndPort.substring(0, hostAndPort.indexOf(":"));
 //            targetDomain = InternetDomainName.from(targetDomain).topPrivateDomain().name();
+            Matcher matcher = domainNamePattern.matcher(targetDomain);
+            matcher.find();
+            targetDomain = matcher.group(2);
 
             if (!httpsDomainSet.contains(targetDomain)) {
 

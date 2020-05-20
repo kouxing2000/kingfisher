@@ -33,7 +33,7 @@ sed "s/example.com/$1/g" openssl-server.cnf > "$server_folder/openssl-server-$1.
 
 openssl req -newkey rsa:2048 -sha256 \
  -config "$server_folder/openssl-server-$1.cnf" \
- -passout pass:123456 -subj "/C=US/ST=California/L=San Francisco/O=Global Security/OU=IT Department/CN=$1" \
+ -passout pass:123456 -subj "/C=US/ST=California/L=San Francisco/O=Global Security/OU=IT Department/CN=*.$1" \
  -keyout $serverFileName.key.pem -out $serverFileName.csr -outform PEM 
 
 if [ $? -eq 0 ]; then

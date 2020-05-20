@@ -24,7 +24,7 @@ organizationName            = Organization Name (eg, company)
 organizationName_default    = KingFisher Server, Limited
 
 commonName          = Common Name (e.g. server FQDN or YOUR name)
-commonName_default      = example.com
+commonName_default      = *.example.com
 
 emailAddress            = Email Address
 emailAddress_default        = test@example.com
@@ -43,6 +43,6 @@ nsComment           = "OpenSSL Generated Certificate"
 [ alternate_names ]
 
 DNS.1       = example.com
-DNS.2       = www.example.com
+DNS.2       = *.example.com
 #DNS.3       = mail.example.com
 #DNS.4       = ftp.example.com
