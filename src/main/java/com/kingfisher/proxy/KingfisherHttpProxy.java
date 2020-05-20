@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.kingfisher.proxy.SSLContextProvider.checkAndGenerateCertification;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
 import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
@@ -59,7 +60,17 @@ public class KingfisherHttpProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(KingfisherHttpProxy.class);
 
-    private final SSLContext sslContext = SSLContextProvider.get("example.com");
+    private SSLContext sslContext;
+
+    {
+        try {
+            String targetDomain = "example.com";
+            checkAndGenerateCertification(targetDomain);
+            sslContext = SSLContextProvider.get(targetDomain);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * @param context
@@ -428,90 +439,6 @@ public class KingfisherHttpProxy {
         return sourceURL;
     }
 
-    private ExecutorService executorService = Executors.newCachedThreadPool();
-
-    private void checkAndGenerateCertification(String targetDomain) {
-
-        if (SSLContextProvider.loadCert(targetDomain) != null) {
-            //if already generated
-            return;
-        }
-
-        try {
-            File folder = new File("proxy_cert");
-            boolean exists = folder.exists();
-
-            if (!exists) {
-                logger.error("no proxy_cert folder found!");
-                System.exit(0);
-            }
-
-            final Process process = Runtime.getRuntime().exec("sh sign_server.sh " + targetDomain, new String[]{}, folder);
-
-            Future<String> future = executorService.submit(new Callable<String>() {
-                @Override
-                public String call() {
-                    BufferedReader reader = null;
-                    try {
-                        reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                        String line = reader.readLine();
-                        while (line != null) {
-                            System.out.println("process info :" + line);
-
-                            line = reader.readLine();
-                        }
-                        return null;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return null;
-                    } finally {
-                        IOUtils.closeQuietly(reader);
-                        System.out.println(Thread.currentThread() + " over with " + process);
-                    }
-
-                }
-
-
-            });
-            Future<String> errFuture = executorService.submit(new Callable<String>() {
-                @Override
-                public String call() {
-                    BufferedReader reader = null;
-                    try {
-                        reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-                        String line = reader.readLine();
-                        while (line != null) {
-                            System.out.println("process error:" + line);
-
-                            line = reader.readLine();
-                        }
-                        return null;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return null;
-                    } finally {
-                        IOUtils.closeQuietly(reader);
-                        System.out.println(Thread.currentThread() + " over with " + process);
-                    }
-
-                }
-
-
-            });
-
-            future.get();
-            errFuture.get();
-
-            if (SSLContextProvider.loadCert(targetDomain) != null) {
-                logger.info("generate cert successfully for {}", targetDomain);
-            }
-
-        } catch (Exception e) {
-            logger.error("failed to generate certification file for domain:" + targetDomain, e);
-            logger.error("you need run " + "'sh sign_server.sh " + targetDomain + "' in proxy_cert folder manually!");
-            System.exit(0);
-        }
-    }
 
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();

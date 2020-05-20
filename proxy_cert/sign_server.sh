@@ -25,13 +25,20 @@ echo ----------
 echo step 1 : generate server request
 echo ----------
 # server request
+echo "subjectAltName $subjectAltName"
 export subjectAltName=DNS:$1,DNS:www.$1
-#echo "subjectAltName $subjectAltName"
+echo "subjectAltName $subjectAltName"
 openssl req -newkey rsa:2048 -sha256 \
  -config openssl-server.cnf \
  -passout pass:123456 -subj "/C=US/ST=California/L=San Francisco/O=Global Security/OU=IT Department/CN=$1" \
  -keyout $serverFileName.key.pem -out $serverFileName.csr -outform PEM 
 
+if [ $? -eq 0 ]; then
+    echo OK
+else
+    echo FAIL step 1
+    exit 1
+fi
 # if you found error on Mac: 140735731753928:error:0E065068:configuration file routines:STR_COPY:variable has no value:/BuildRoot/Library/Caches/com.apple.xbs/Sources/libressl/libressl-22.50.2/libressl/crypto/conf/conf_def.c:573:line 39
 # then run brew update && brew upgrade
 # you will find openssl related log
@@ -47,11 +54,25 @@ echo ----------
 openssl ca -config openssl-ca.cnf -batch -passin pass:123456 -policy signing_policy -extensions signing_req \
  -out $serverFileName.pem -infiles $serverFileName.csr
 
+if [ $? -eq 0 ]; then
+    echo OK
+else
+    echo FAIL step 2
+    exit 1
+fi
+
 echo ----------
 echo step 3 : convert from pem to pkcs12
 echo ----------
 openssl pkcs12 -export -inkey $serverFileName.key.pem -in $serverFileName.pem -out $serverFileName.p12 \
  -passin pass:123456 -passout pass:123456
+
+if [ $? -eq 0 ]; then
+    echo OK
+else
+    echo FAIL Step 3
+    exit 1
+fi
 
 echo ----------
 echo step 4 : copy
