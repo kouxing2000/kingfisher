@@ -5,6 +5,7 @@
 /.project
 *.class
 .DS_Store
+server_cert/*
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

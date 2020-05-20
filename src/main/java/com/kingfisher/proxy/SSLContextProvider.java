@@ -162,14 +162,16 @@ public class SSLContextProvider {
 
             future.get();
             errFuture.get();
-
-            if (process.exitValue() == 1) {
+            
+            if (process.waitFor() == 1) {
                 System.exit(1);
             }
 
             if (SSLContextProvider.loadCert(targetDomain) != null) {
                 logger.info("generate cert successfully for {}", targetDomain);
             }
+
+
 
         } catch (Exception e) {
             logger.error("failed to generate certification file for domain:" + targetDomain, e);

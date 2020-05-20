@@ -25,11 +25,14 @@ echo ----------
 echo step 1 : generate server request
 echo ----------
 # server request
-echo "subjectAltName $subjectAltName"
-export subjectAltName=DNS:$1,DNS:www.$1
-echo "subjectAltName $subjectAltName"
+#export subjectAltName=DNS:$1,DNS:www.$1
+#echo "subjectAltName $subjectAltName"
+
+sed "s/example.com/$1/g" openssl-server.cnf > "$server_folder/openssl-server-$1.cnf"
+# -config "$server_folder/openssl-server-$1.cnf" \
+
 openssl req -newkey rsa:2048 -sha256 \
- -config openssl-server.cnf \
+ -config "$server_folder/openssl-server-$1.cnf" \
  -passout pass:123456 -subj "/C=US/ST=California/L=San Francisco/O=Global Security/OU=IT Department/CN=$1" \
  -keyout $serverFileName.key.pem -out $serverFileName.csr -outform PEM 
 
@@ -78,8 +81,8 @@ echo ----------
 echo step 4 : copy
 echo ----------
 echo $serverFileName.p12
-cp $serverFileName.p12  ../src/main/resources/server_cert/
-cp $serverFileName.p12  ../target/classes/server_cert/
+#cp $serverFileName.p12  ../src/main/resources/server_cert/
+#cp $serverFileName.p12  ../target/classes/server_cert/
 cp $serverFileName.p12  ../server_cert/
 
 

@@ -1,16 +1,14 @@
 package com.kingfisher.proxy;
 
-import com.google.gson.*;
-import com.kingfisher.proxy.config.*;
+import com.kingfisher.proxy.config.AllConfig;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -38,11 +36,17 @@ public class ProxyStarter {
         File configFile = null;
 
         if (args != null && args.length >= 1) {
-            configFile = new File(args[0]);
+            String inputFile = args[0];
+            configFile = new File(inputFile);
 
             if (!configFile.exists()) {
-                logger.error("Failed to load config file: {} , use default config", args[0]);
-                configFile = null;
+                URL resource = ClassLoader.getSystemResource(inputFile);
+                if (resource != null) {
+                    configFile = new File(resource.toURI());
+                } else {
+                    logger.error("Failed to load config file: {} , use default config", inputFile);
+                    configFile = null;
+                }
             }
 
         } else {

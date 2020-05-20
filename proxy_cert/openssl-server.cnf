@@ -35,14 +35,14 @@ emailAddress_default        = test@example.com
 subjectKeyIdentifier        = hash
 basicConstraints        = CA:FALSE
 keyUsage            = digitalSignature, keyEncipherment
-#subjectAltName          = @alternate_names
-subjectAltName           = ${ENV::subjectAltName}
+subjectAltName          = @alternate_names
+#subjectAltName           = ${ENV::subjectAltName}
 nsComment           = "OpenSSL Generated Certificate"
 
 ####################################################################
 [ alternate_names ]
 
-#DNS.1       = example.com
-#DNS.2       = www.example.com
+DNS.1       = example.com
+DNS.2       = www.example.com
 #DNS.3       = mail.example.com
 #DNS.4       = ftp.example.com
