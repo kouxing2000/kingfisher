@@ -5,6 +5,9 @@ public class RuleConfig {
 
     private boolean disabled;
 
+    //TODO support http method, request header, request payload
+    private String method;
+
     private String url;
 
     private String script;

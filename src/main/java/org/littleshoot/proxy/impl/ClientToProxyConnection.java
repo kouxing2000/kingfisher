@@ -1,6 +1,8 @@
 package org.littleshoot.proxy.impl;
 
 import static org.littleshoot.proxy.impl.ConnectionState.*;
+
+import com.kingfisher.proxy.ProxyToServerInterceptor;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -34,7 +36,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLSession;
 
@@ -46,10 +47,6 @@ import org.littleshoot.proxy.FullFlowContext;
 import org.littleshoot.proxy.HttpFilters;
 import org.littleshoot.proxy.ProxyAuthenticator;
 import org.littleshoot.proxy.SslEngineSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.kingfisher.proxy.Constants;
 
 /**
  * <p>
@@ -176,32 +173,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         }
     }
     
-    static class Kingfisher{
-    	
-    }
-    
-    private static Logger kingfisherLogger = LoggerFactory.getLogger(Kingfisher.class);
-    
-    private static final Map<String, String> httpsHostPortMapping = new ConcurrentHashMap<String, String>();
-    public static Map<String, String> getHttpsHostPortMapping() {
-		return httpsHostPortMapping;
-	}
 
-	private static final Map<Pattern, String> httpsPatternHostPortMapping = new ConcurrentHashMap<Pattern, String>();
-    
-    public static void addHttpsHostPortMapping(String sourceHostPort, String targetHostPort) {
-    	httpsHostPortMapping.put(sourceHostPort, targetHostPort);
-    	
-    	String wildCardSource = sourceHostPort;
-    	String regex = ProxyUtils.wildcardToRegex(wildCardSource);
-    	Pattern pattern = Pattern.compile(regex);
-    	httpsPatternHostPortMapping.put(pattern, targetHostPort);
-    }
-    
-    public static void clearHttpsHostPortMapping() {
-    	httpsHostPortMapping.clear();
-    	httpsPatternHostPortMapping.clear();
-    }
 
     /**
      * <p>
@@ -235,8 +207,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
         }
 
         // Identify our server and chained proxy
-        String oriServerHostAndPort = identifyHostAndPort(httpRequest);
-        String serverHostAndPort = oriServerHostAndPort;
+        String serverHostAndPort = identifyHostAndPort(httpRequest);
 
         LOG.debug("Ensuring that hostAndPort are available in {}",
                 httpRequest.getUri());
@@ -257,30 +228,9 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
                     "Not reusing existing ProxyToServerConnection because request is a CONNECT for: {}",
                     serverHostAndPort);
             newConnectionRequired = true;
-            
-            //XXX magic place
-            if (!serverHostAndPort.contains(":")) {
-            	serverHostAndPort = serverHostAndPort + ":443";
-            }
-            
-            if (httpsHostPortMapping.containsKey(serverHostAndPort)) {
-            	serverHostAndPort = httpsHostPortMapping.get(serverHostAndPort);
-            } else {
-            	for (Map.Entry<Pattern, String> entry : httpsPatternHostPortMapping.entrySet()) {
-            		if (entry.getKey().matcher(serverHostAndPort).matches()) {
-            			serverHostAndPort = entry.getValue();
-            		}
-            	}
-            }
-            
-            if (!oriServerHostAndPort.equals(serverHostAndPort)) {
 
-            	httpRequest.headers().add(Constants.HEADER_FLAG_NO_PROXY, "TRUE");
-            	
-            	kingfisherLogger.debug("replace " + oriServerHostAndPort + " to " + serverHostAndPort);
-            } else {
-            	kingfisherLogger.debug("no replacement for {}", oriServerHostAndPort);
-            }
+            serverHostAndPort = ProxyToServerInterceptor.getInstance().hackServerHostAndPort(httpRequest, serverHostAndPort);
+
         } else if (currentServerConnection == null) {
             LOG.debug("Didn't find existing ProxyToServerConnection for: {}",
                     serverHostAndPort);

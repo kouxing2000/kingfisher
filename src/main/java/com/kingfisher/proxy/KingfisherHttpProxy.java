@@ -316,7 +316,7 @@ public class KingfisherHttpProxy {
 
         httpsDomainSet.clear();
 
-        ClientToProxyConnection.clearHttpsHostPortMapping();
+        ProxyToServerInterceptor.getInstance().clearHttpsHostPortMapping();
 
         this.config = configIn;
 
@@ -385,7 +385,7 @@ public class KingfisherHttpProxy {
             }
         }
 
-        logger.info("Intercept HttpsHostPort : {}", ClientToProxyConnection.getHttpsHostPortMapping().keySet());
+        logger.info("Intercept HttpsHostPort : {}", ProxyToServerInterceptor.getInstance().getHttpsHostPortMapping().keySet());
     }
 
     private HttpRequestHandler createHandler(final RuleConfig ruleConfig) {
@@ -422,12 +422,13 @@ public class KingfisherHttpProxy {
                 String httpsServerInternalHost = HTTPS_SERVER_INTERNAL_HOST;
                 int httpsServerInternalPort = HTTPS_SERVER_INTERNAL_PORT.incrementAndGet();
 
+                //TODO on demand load
                 startHttpsInternalServer(targetDomain,
                         httpsServerInternalHost, httpsServerInternalPort,
                         // load the certificate for the particular domain
                         SSLContextProvider.get(targetDomain));
 
-                ClientToProxyConnection.addHttpsHostPortMapping(hostAndPort, httpsServerInternalHost + ":"
+                ProxyToServerInterceptor.getInstance().addHttpsHostPortMapping(hostAndPort, httpsServerInternalHost + ":"
                         + httpsServerInternalPort);
             }
 
