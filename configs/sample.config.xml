@@ -52,7 +52,7 @@
             <url>https://${env}.com/3/</url>
             <script><![CDATA[
 
-                delegator.read("./src/main/resources/sample.config.xml");
+                delegator.read("./configs/sample.config.xml");
 
             ]]></script>
         </com.kingfisher.proxy.config.RuleConfig>
