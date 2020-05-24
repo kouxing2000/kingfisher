@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.kingfisher.proxy.util.Utils;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
 import org.littleshoot.proxy.impl.ProxyUtils;
@@ -89,7 +90,7 @@ public class ProxyConfig {
 			synchronized (this) {
 				bypassHostPatterns = new ArrayList<Pattern>();
 				for (String bypassHost : bypassHosts) {
-					String regex = ProxyUtils.wildcardToRegex(bypassHost);
+					String regex = Utils.wildcardToRegex(bypassHost);
 					bypassHostPatterns.add(Pattern.compile(regex));
 				}
 			}

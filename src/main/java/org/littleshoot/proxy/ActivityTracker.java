@@ -3,9 +3,8 @@ package org.littleshoot.proxy;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 
-import java.net.InetSocketAddress;
-
 import javax.net.ssl.SSLSession;
+import java.net.InetSocketAddress;
 
 /**
  * <p>
@@ -33,7 +32,7 @@ public interface ActivityTracker {
      * @param sslSession
      */
     void clientSSLHandshakeSucceeded(InetSocketAddress clientAddress,
-            SSLSession sslSession);
+                                     SSLSession sslSession);
 
     /**
      * Record that a client disconnected.
@@ -42,7 +41,7 @@ public interface ActivityTracker {
      * @param sslSession
      */
     void clientDisconnected(InetSocketAddress clientAddress,
-            SSLSession sslSession);
+                            SSLSession sslSession);
 
     /**
      * Record that the proxy received bytes from the client.
@@ -53,7 +52,7 @@ public interface ActivityTracker {
      * @param numberOfBytes
      */
     void bytesReceivedFromClient(FlowContext flowContext,
-            int numberOfBytes);
+                                 int numberOfBytes);
 
     /**
      * <p>
@@ -71,7 +70,7 @@ public interface ActivityTracker {
      * @param httpRequest
      */
     void requestReceivedFromClient(FlowContext flowContext,
-            HttpRequest httpRequest);
+                                   HttpRequest httpRequest);
 
     /**
      * Record that the proxy attempted to send bytes to the server.
@@ -97,7 +96,7 @@ public interface ActivityTracker {
      * @param httpRequest
      */
     void requestSentToServer(FullFlowContext flowContext,
-            HttpRequest httpRequest);
+                             HttpRequest httpRequest);
 
     /**
      * Record that the proxy received bytes from the server.
@@ -123,7 +122,7 @@ public interface ActivityTracker {
      * @param httpResponse
      */
     void responseReceivedFromServer(FullFlowContext flowContext,
-            HttpResponse httpResponse);
+                                    HttpResponse httpResponse);
 
     /**
      * Record that the proxy sent bytes to the client.
@@ -151,6 +150,6 @@ public interface ActivityTracker {
      * @param httpResponse
      */
     void responseSentToClient(FlowContext flowContext,
-            HttpResponse httpResponse);
+                              HttpResponse httpResponse);
 
 }

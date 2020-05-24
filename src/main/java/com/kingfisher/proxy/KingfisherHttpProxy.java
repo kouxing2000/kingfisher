@@ -5,6 +5,7 @@ import com.kingfisher.proxy.config.AllConfig;
 import com.kingfisher.proxy.config.ProxyConfig;
 import com.kingfisher.proxy.config.RuleConfig;
 import com.kingfisher.proxy.intf.HttpRequestHandler;
+import com.kingfisher.proxy.util.Utils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -224,7 +225,7 @@ public class KingfisherHttpProxy {
 
                 return new HttpFiltersAdapter(originalRequest) {
                     @Override
-                    public HttpResponse requestPre(HttpObject httpObject) {
+                    public HttpResponse clientToProxyRequest(HttpObject httpObject) {
 
                         if (logger.isDebugEnabled()) {
                             logEvent("[proxy] requestPre:", httpObject);
@@ -354,7 +355,7 @@ public class KingfisherHttpProxy {
 
             String sourceURL = addSourceUrls(ruleConfig.getUrl());
 
-            String patternString = ProxyUtils.wildcardToRegex(sourceURL);
+            String patternString = Utils.wildcardToRegex(sourceURL);
             Map<String, Integer> variables = null;
             Matcher matcher = namedGroupPattern.matcher(patternString);
             int groupId = 1;

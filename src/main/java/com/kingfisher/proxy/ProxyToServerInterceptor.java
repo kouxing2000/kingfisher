@@ -1,5 +1,6 @@
 package com.kingfisher.proxy;
 
+import com.kingfisher.proxy.util.Utils;
 import io.netty.handler.codec.http.HttpRequest;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ public class ProxyToServerInterceptor {
         httpsHostPortMapping.put(sourceHostPort, targetHostPort);
 
         String wildCardSource = sourceHostPort;
-        String regex = ProxyUtils.wildcardToRegex(wildCardSource);
+        String regex = Utils.wildcardToRegex(wildCardSource);
         Pattern pattern = Pattern.compile(regex);
         httpsPatternHostPortMapping.put(pattern, targetHostPort);
     }

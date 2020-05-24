@@ -1,5 +1,7 @@
 package org.littleshoot.proxy;
 
+import org.littleshoot.proxy.impl.ThreadPoolConfiguration;
+
 import java.net.InetSocketAddress;
 
 /**
@@ -82,28 +84,26 @@ public interface HttpProxyServerBootstrap {
     HttpProxyServerBootstrap withAllowLocalOnly(boolean allowLocalOnly);
 
     /**
-     * <p>
-     * Specify whether or not to listen on all interfaces.
-     * </p>
-     * 
-     * <p>
-     * Default = false
-     * </p>
-     * 
-     * @param listenOnAllAddresses
-     * @return
+     * This method has no effect and will be removed in a future release.
+     * @deprecated use {@link #withNetworkInterface(InetSocketAddress)} to avoid listening on all local addresses
      */
-    HttpProxyServerBootstrap withListenOnAllAddresses(
-            boolean listenOnAllAddresses);
+    @Deprecated
+    HttpProxyServerBootstrap withListenOnAllAddresses(boolean listenOnAllAddresses);
 
     /**
      * <p>
      * Specify an {@link SslEngineSource} to use for encrypting inbound
-     * connections.
+     * connections. Enabling this will enable SSL client authentication
+     * by default (see {@link #withAuthenticateSslClients(boolean)})
      * </p>
      * 
      * <p>
      * Default = null
+     * </p>
+     * 
+     * <p>
+     * Note - This and {@link #withManInTheMiddle(MitmManager)} are
+     * mutually exclusive.
      * </p>
      * 
      * @param sslEngineSource
@@ -154,11 +154,6 @@ public interface HttpProxyServerBootstrap {
      * Default = null
      * </p>
      * 
-     * <p>
-     * Note - This and {@link #withManInTheMiddle(MitmManager)} are currently
-     * mutually exclusive.
-     * </p>
-     * 
      * @param chainProxyManager
      * @return
      */
@@ -176,8 +171,8 @@ public interface HttpProxyServerBootstrap {
      * </p>
      * 
      * <p>
-     * Note - This and {@link #withChainProxyManager(ChainedProxyManager)} are
-     * currently mutually exclusive.
+     * Note - This and {@link #withSslEngineSource(SslEngineSource)} are
+     * mutually exclusive.
      * </p>
      * 
      * @param mitmManager
@@ -268,7 +263,7 @@ public interface HttpProxyServerBootstrap {
     /**
      * Specify a custom {@link HostResolver} for resolving server addresses.
      * 
-     * @param resolver
+     * @param serverResolver
      * @return
      */
     HttpProxyServerBootstrap withServerResolver(HostResolver serverResolver);
@@ -285,11 +280,59 @@ public interface HttpProxyServerBootstrap {
 
     /**
      * <p>
+     * Specify the read and/or write bandwidth throttles for this proxy server. 0 indicates not throttling.
+     * </p>
+     * @param readThrottleBytesPerSecond
+     * @param writeThrottleBytesPerSecond
+     * @return
+     */
+    HttpProxyServerBootstrap withThrottling(long readThrottleBytesPerSecond, long writeThrottleBytesPerSecond);
+
+    /**
+     * All outgoing-communication of the proxy-instance is goin' to be routed via the given network-interface
+     *
+     * @param inetSocketAddress to be used for outgoing communication
+     */
+    HttpProxyServerBootstrap withNetworkInterface(InetSocketAddress inetSocketAddress);
+    
+    HttpProxyServerBootstrap withMaxInitialLineLength(int maxInitialLineLength);
+    
+    HttpProxyServerBootstrap withMaxHeaderSize(int maxHeaderSize);
+    
+    HttpProxyServerBootstrap withMaxChunkSize(int maxChunkSize);
+
+    /**
+     * When true, the proxy will accept requests that appear to be directed at an origin server (i.e. the URI in the HTTP
+     * request will contain an origin-form, rather than an absolute-form, as specified in RFC 7230, section 5.3).
+     * This is useful when the proxy is acting as a gateway/reverse proxy. <b>Note:</b> This feature should not be
+     * enabled when running as a forward proxy; doing so may cause an infinite loop if the client requests the URI of the proxy.
+     *
+     * @param allowRequestToOriginServer when true, the proxy will accept origin-form HTTP requests
+     */
+    HttpProxyServerBootstrap withAllowRequestToOriginServer(boolean allowRequestToOriginServer);
+
+    /**
+     * Sets the alias to use when adding Via headers to incoming and outgoing HTTP messages. The alias may be any
+     * pseudonym, or if not specified, defaults to the hostname of the local machine. See RFC 7230, section 5.7.1.
+     *
+     * @param alias the pseudonym to add to Via headers
+     */
+    HttpProxyServerBootstrap withProxyAlias(String alias);
+
+    /**
+     * <p>
      * Build and starts the server.
      * </p>
-     * 
+     *
      * @return the newly built and started server
      */
     HttpProxyServer start();
 
+    /**
+     * Set the configuration parameters for the proxy's thread pools.
+     *
+     * @param configuration thread pool configuration
+     * @return proxy server bootstrap for chaining
+     */
+    HttpProxyServerBootstrap withThreadPoolConfiguration(ThreadPoolConfiguration configuration);
 }
