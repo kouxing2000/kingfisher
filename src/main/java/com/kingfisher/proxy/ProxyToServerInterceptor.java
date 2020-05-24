@@ -45,7 +45,6 @@ public class ProxyToServerInterceptor {
     }
 
     public String hackServerHostAndPort(HttpRequest httpRequest, String oriServerHostAndPort) {
-        //XXX magic place
         String serverHostAndPort = oriServerHostAndPort;
 
         if (!serverHostAndPort.contains(":")) {

@@ -229,6 +229,7 @@ public class ClientToProxyConnection extends ProxyConnection<HttpRequest> {
                     serverHostAndPort);
             newConnectionRequired = true;
 
+            //XXX magic place
             serverHostAndPort = ProxyToServerInterceptor.getInstance().hackServerHostAndPort(httpRequest, serverHostAndPort);
 
         } else if (currentServerConnection == null) {

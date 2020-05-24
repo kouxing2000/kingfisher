@@ -1,11 +1,13 @@
 #TODO
-## For every user, generate a unique root cert to prevent security risk
+- support multiple users
+    - For every user, generate a unique root cert to prevent security risk
+    - Identify user by ?
 
-## Live Graphic Dashboard for network traffic
+- upgrade little proxy https://github.com/adamfisk/LittleProxy
 
-## Browser Plugin to make user easier to use
+- Live Graphic Dashboard for network traffic
 
-### features
+## Browser Plugin
 - user login also support anonymous 
 - flow
     - user: view the traffic, and select the one for mock
