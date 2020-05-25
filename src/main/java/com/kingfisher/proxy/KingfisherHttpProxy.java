@@ -1,6 +1,5 @@
 package com.kingfisher.proxy;
 
-import com.google.common.net.InternetDomainName;
 import com.kingfisher.proxy.config.AllConfig;
 import com.kingfisher.proxy.config.ProxyConfig;
 import com.kingfisher.proxy.config.RuleConfig;
@@ -18,10 +17,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.*;
-import org.littleshoot.proxy.impl.ClientToProxyConnection;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
@@ -29,15 +26,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -212,7 +207,7 @@ public class KingfisherHttpProxy {
     final Map<Pattern, HttpRequestHandler> urlMappings = new LinkedHashMap<Pattern, HttpRequestHandler>();
 
     // <Pattern, <group_name, group_id>>
-    final Map<Pattern, Map<String, Integer>> urlMappingNamedGroupMappings = new HashMap<Pattern, Map<String, Integer>>();
+    final Map<Pattern, Map<String, Integer>> urlMappingNamedGroupMappings = new HashMap<>();
 
     private HttpProxyServer proxyServer;
 
@@ -239,7 +234,8 @@ public class KingfisherHttpProxy {
                         return null;
                     }
 
-                    public HttpObject responsePre(HttpObject httpObject) {
+                    @Override
+                    public HttpObject serverToProxyResponse(HttpObject httpObject) {
                         if (logger.isDebugEnabled()) {
                             logEvent("[proxy] responsePre:", httpObject);
                         }

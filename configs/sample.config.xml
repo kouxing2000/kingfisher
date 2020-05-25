@@ -37,6 +37,7 @@
             }
             ]]></script>
         </com.kingfisher.proxy.config.RuleConfig>
+
         <!-- example: generate response base on URL -->
         <com.kingfisher.proxy.config.RuleConfig>
             <url>http://${env}.com/2/</url>

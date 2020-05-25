@@ -171,8 +171,6 @@ public class SSLContextProvider {
                 logger.info("generate cert successfully for {}", targetDomain);
             }
 
-
-
         } catch (Exception e) {
             logger.error("failed to generate certification file for domain:" + targetDomain, e);
             logger.error("you need run " + "'sh sign_server.sh " + targetDomain + "' in proxy_cert folder manually!");

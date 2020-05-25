@@ -1,9 +1,8 @@
 #TODO
+- spring boot
 - support multiple users
     - For every user, generate a unique root cert to prevent security risk
-    - Identify user by ?
-
-- upgrade little proxy https://github.com/adamfisk/LittleProxy
+    - Identify user by IP? user agent? 
 
 - Live Graphic Dashboard for network traffic
 
@@ -22,16 +21,14 @@
 
 ### refer 
 https://developer.chrome.com/extensions/proxy
-
 https://github.com/henices/Chrome-proxy-helper
 
+https://developer.chrome.com/extensions/webRequest
+https://github.com/jugglinmike/chrome-user-agent/blob/master/src/background.js
 
 https://github.com/mitmproxy/mitmproxy
 https://github.com/dutzi/tamper
 
-how identify user's request
-by special header?
-https://developer.chrome.com/extensions/webRequest#life_cycle_footnote
+#DONE
+- upgrade little proxy https://github.com/adamfisk/LittleProxy
 
-by cookie
-https://github.com/westoque/cookie_inspector/blob/master/manifest.json

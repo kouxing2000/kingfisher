@@ -61,8 +61,6 @@ public class JavaScriptHttpRequestHandler implements HttpRequestHandler {
                 bindings.put(e.getKey(), e.getValue());
             }
 
-            //TODO add cache binding
-
             return (HttpResponse) engine.eval(ruleConfig.getScript(), bindings);
         } catch (Exception e) {
             throw new RuntimeException(e);
