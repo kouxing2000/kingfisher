@@ -590,14 +590,18 @@ public class KingfisherHttpProxy {
             channel.attr(HttpRequestKey).set(request);
             channel.attr(ResponseCallbackKey).set(calback);
 
-            // Send the HTTP request (copied)
-            FullHttpRequest req0 = ((DefaultFullHttpRequest) request).copy();
+            if (request instanceof DefaultFullHttpRequest) {
+                // Send the HTTP request (copied)
+                FullHttpRequest req0 = ((DefaultFullHttpRequest) request).copy();
 
-            if (logger.isDebugEnabled()) {
-                logEvent("[internal client] send", req0);
+                if (logger.isDebugEnabled()) {
+                    logEvent("[internal client] send", req0);
+                }
+
+                channel.writeAndFlush(req0);
+            } else {
+                channel.writeAndFlush(request);
             }
-
-            channel.writeAndFlush(req0);
 
             // no need the following, because of async mode
             // Wait for the server to close the connection.
