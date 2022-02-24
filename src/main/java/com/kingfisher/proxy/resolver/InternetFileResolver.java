@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +76,7 @@ public class InternetFileResolver implements URLResolver {
 					boolean debug = false;
 					if (debug) {
 
-						Charset encoding = Charset.forName("UTF-8");
+						Charset encoding = StandardCharsets.UTF_8;
 						String responseString = IOUtils.toString(instream, encoding);
 						logger.debug(responseString);
 						instream = IOUtils.toInputStream(responseString, encoding);

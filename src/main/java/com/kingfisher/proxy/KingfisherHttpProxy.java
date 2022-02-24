@@ -548,7 +548,7 @@ public class KingfisherHttpProxy {
 
                     @Override
                     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                        logger.info("[internal client] exceptionCaught:{}", cause, cause.getMessage());
+                        logger.info("[internal client] exceptionCaught", cause);
                         ctx.close();
                     }
                 });
