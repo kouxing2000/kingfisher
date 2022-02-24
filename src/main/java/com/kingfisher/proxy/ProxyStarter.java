@@ -25,7 +25,8 @@ public class ProxyStarter {
 
     static long lastConfigFileModifiedTS = 0;
 
-    private static final String DEFAULT_CONFIG = "sample.config.xml";
+    private static final String DEFAULT_CONFIG =
+            "sample.config.xml";
 
     public static void main(String[] args) throws Exception {
 
@@ -130,6 +131,10 @@ public class ProxyStarter {
     }
 
     private static AllConfig readConfig(String configuration) throws IOException {
-        return (AllConfig) new XStream().fromXML(configuration);
+        XStream xStream = new XStream();
+        xStream.allowTypesByWildcard(new String[] {
+                "com.kingfisher.proxy.config.**",
+        });
+        return (AllConfig) xStream.fromXML(configuration);
     }
 }
