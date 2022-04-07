@@ -448,7 +448,7 @@ public class KingfisherHttpProxy {
 
     private void startHttpsInternalServer(String domain, String host, int port, final SSLContext sslContextParameter) {
 
-        logger.info("try to bind internal https port for domain:{}, {}:{}", new Object[]{domain, host, port});
+        logger.info("try to bind internal https port for domain:{}, {}:{}", domain, host, port);
 
         try {
             ServerBootstrap internalHttpsServerBootstrap = new ServerBootstrap();
@@ -600,6 +600,7 @@ public class KingfisherHttpProxy {
 
                 channel.writeAndFlush(req0);
             } else {
+                //TODO if not copied, what is the impact
                 channel.writeAndFlush(request);
             }
 

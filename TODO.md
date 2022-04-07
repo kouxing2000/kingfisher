@@ -26,12 +26,13 @@ https://github.com/henices/Chrome-proxy-helper
 https://developer.chrome.com/extensions/webRequest
 https://github.com/jugglinmike/chrome-user-agent/blob/master/src/background.js
 
-seems no need proxy, with this :|
+seems no need proxy, with this :| (note: not works for every case, this may break the js logic)
 https://chrome.google.com/webstore/detail/chrome-response-override/kbipbobgpnhgghikihmodppmfbkbmgfj/related?hl=en-US
 https://github.com/Pasupathi-Rajamanickam/chrome-response-override
 
 
 https://github.com/mitmproxy/mitmproxy
+
 https://github.com/dutzi/tamper
 
 #DONE
